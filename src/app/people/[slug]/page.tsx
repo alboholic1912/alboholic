@@ -2,18 +2,20 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import BackLink from "@/components/BackLink/BackLink";
 import ImagePlaceholder from "@/components/ImagePlaceholder/ImagePlaceholder";
-import { getPersonBySlug, people } from "@/lib/mockData";
+import { getPersonBySlug, getPeople } from "@/lib/content/public";
 import styles from "./person.module.css";
 
-export function generateStaticParams() {
-  return people.map((person) => ({ slug: person.slug }));
+export const revalidate = 60;
+
+export async function generateStaticParams() {
+  return (await getPeople()).map((person) => ({ slug: person.slug }));
 }
 
 export async function generateMetadata({
   params,
 }: PageProps<"/people/[slug]">): Promise<Metadata> {
   const { slug } = await params;
-  const person = getPersonBySlug(slug);
+  const person = await getPersonBySlug(slug);
 
   if (!person) {
     return { title: "Person not found — Alboholic" };
@@ -27,7 +29,7 @@ export async function generateMetadata({
 
 export default async function PersonPage({ params }: PageProps<"/people/[slug]">) {
   const { slug } = await params;
-  const person = getPersonBySlug(slug);
+  const person = await getPersonBySlug(slug);
 
   if (!person) {
     notFound();
@@ -39,7 +41,7 @@ export default async function PersonPage({ params }: PageProps<"/people/[slug]">
 
       <div className={styles.header}>
         <div className={styles.media}>
-          <ImagePlaceholder tone={person.imageTone} aiImage />
+          <ImagePlaceholder tone={person.imageTone} aiImage src={person.image} alt={person.name} />
         </div>
         <div className={styles.info}>
           <h1 className={styles.name}>{person.name}</h1>

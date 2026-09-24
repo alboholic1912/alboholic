@@ -1,10 +1,12 @@
 import Link from "next/link";
 import ImagePlaceholder from "@/components/ImagePlaceholder/ImagePlaceholder";
 import SectionHeading from "@/components/SectionHeading/SectionHeading";
-import { people } from "@/lib/mockData";
+import { getPeople } from "@/lib/content/public";
 import styles from "./PeopleSection.module.css";
 
-export default function PeopleSection() {
+export default async function PeopleSection() {
+  const people = await getPeople();
+
   return (
     <section className={styles.section}>
       <div className="container">
@@ -13,7 +15,7 @@ export default function PeopleSection() {
           {people.map((person) => (
             <Link key={person.slug} href={`/people/${person.slug}`} className={styles.card}>
               <div className={styles.media}>
-                <ImagePlaceholder tone={person.imageTone} aiImage />
+                <ImagePlaceholder tone={person.imageTone} aiImage src={person.image} alt={person.name} />
               </div>
               <span className={styles.name}>{person.name}</span>
               <span className={styles.role}>{person.role}</span>

@@ -3,13 +3,16 @@
 import { useState } from "react";
 import Link from "next/link";
 import ImagePlaceholder from "@/components/ImagePlaceholder/ImagePlaceholder";
-import { featuredStories } from "@/lib/mockData";
+import type { Story } from "@/lib/content/public";
 import styles from "./Hero.module.css";
 
-export default function Hero() {
+export default function Hero({ stories }: { stories: Story[] }) {
   const [active, setActive] = useState(0);
-  const story = featuredStories[active];
-  const count = featuredStories.length;
+  const count = stories.length;
+
+  if (count === 0) return null;
+
+  const story = stories[active];
 
   function go(delta: number) {
     setActive((value) => (value + delta + count) % count);
@@ -19,7 +22,7 @@ export default function Hero() {
     <section className={styles.hero}>
       <div className={`container ${styles.inner}`}>
         <div className={styles.media}>
-          <ImagePlaceholder tone={story.imageTone} aiImage={story.aiImage} />
+          <ImagePlaceholder tone={story.imageTone} aiImage={story.aiImage} src={story.image} alt={story.title} />
 
           {story.credit && <span className={styles.credit}>{story.credit}</span>}
 
@@ -46,7 +49,7 @@ export default function Hero() {
 
           {count > 1 && (
             <div className={styles.pagination} role="tablist" aria-label="Featured stories">
-              {featuredStories.map((item, index) => (
+              {stories.map((item, index) => (
                 <button
                   key={item.slug}
                   type="button"

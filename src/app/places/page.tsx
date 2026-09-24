@@ -1,15 +1,19 @@
 import type { Metadata } from "next";
 import PageIntro from "@/components/PageIntro/PageIntro";
 import PlaceCard from "@/components/PlaceCard/PlaceCard";
-import { places } from "@/lib/mockData";
+import { getPlaces } from "@/lib/content/public";
 import styles from "./places.module.css";
+
+export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: "Places — Alboholic",
   description: "The castles, ruins and cities that carry Albania's history.",
 };
 
-export default function PlacesPage() {
+export default async function PlacesPage() {
+  const places = await getPlaces();
+
   return (
     <div className="container">
       <PageIntro

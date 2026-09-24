@@ -1,15 +1,19 @@
 import type { Metadata } from "next";
 import PageIntro from "@/components/PageIntro/PageIntro";
 import PersonCard from "@/components/PersonCard/PersonCard";
-import { people } from "@/lib/mockData";
+import { getPeople } from "@/lib/content/public";
 import styles from "./people.module.css";
+
+export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: "People — Alboholic",
   description: "The military leaders, statesmen, humanitarians and writers who shaped Albanian history.",
 };
 
-export default function PeoplePage() {
+export default async function PeoplePage() {
+  const people = await getPeople();
+
   return (
     <div className="container">
       <PageIntro

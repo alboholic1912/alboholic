@@ -1,13 +1,13 @@
 import Link from "next/link";
 import ImagePlaceholder from "@/components/ImagePlaceholder/ImagePlaceholder";
-import type { Story } from "@/lib/mockData";
+import type { Story } from "@/lib/content/public";
 import styles from "./StoryCard.module.css";
 
 export default function StoryCard({ story }: { story: Story }) {
   return (
     <Link href={`/stories/${story.slug}`} className={styles.card}>
       <div className={styles.media}>
-        <ImagePlaceholder tone={story.imageTone} aiImage={story.aiImage} />
+        <ImagePlaceholder tone={story.imageTone} aiImage={story.aiImage} src={story.image} alt={story.title} />
       </div>
       <div className={styles.body}>
         <span className={styles.category}>{story.category}</span>
