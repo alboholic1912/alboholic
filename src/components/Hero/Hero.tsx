@@ -19,7 +19,7 @@ export default function Hero() {
     <section className={styles.hero}>
       <div className={`container ${styles.inner}`}>
         <div className={styles.media}>
-          <ImagePlaceholder tone={story.imageTone} aiImage={story.aiImage} />
+          <ImagePlaceholder tone={story.imageTone} aiImage={story.aiImage} src={story.image} alt={story.title} />
 
           {story.credit && <span className={styles.credit}>{story.credit}</span>}
 

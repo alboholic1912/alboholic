@@ -45,7 +45,7 @@ export default async function StoryPage({ params }: PageProps<"/stories/[slug]">
         <BackLink href="/stories" label="Back to Stories" />
 
         <div className={styles.media}>
-          <ImagePlaceholder tone={story.imageTone} aiImage={story.aiImage} />
+          <ImagePlaceholder tone={story.imageTone} aiImage={story.aiImage} src={story.image} alt={story.title} />
           {story.credit && <span className={styles.credit}>{story.credit}</span>}
         </div>
 

@@ -38,7 +38,7 @@ export default async function PlacePage({ params }: PageProps<"/places/[slug]">)
       <BackLink href="/places" label="Back to Places" />
 
       <div className={styles.media}>
-        <ImagePlaceholder tone={place.imageTone} aiImage />
+        <ImagePlaceholder tone={place.imageTone} aiImage src={place.image} alt={place.name} />
       </div>
 
       <div className={styles.prose}>

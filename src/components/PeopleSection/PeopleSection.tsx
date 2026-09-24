@@ -13,7 +13,7 @@ export default function PeopleSection() {
           {people.map((person) => (
             <Link key={person.slug} href={`/people/${person.slug}`} className={styles.card}>
               <div className={styles.media}>
-                <ImagePlaceholder tone={person.imageTone} aiImage />
+                <ImagePlaceholder tone={person.imageTone} aiImage src={person.image} alt={person.name} />
               </div>
               <span className={styles.name}>{person.name}</span>
               <span className={styles.role}>{person.role}</span>

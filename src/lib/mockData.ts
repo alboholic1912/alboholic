@@ -9,6 +9,8 @@ export type Story = {
   aiImage: boolean;
   credit?: string;
   body?: string[];
+  /** Path under /public to a real image, e.g. "/images/stories/my-slug.jpg". Falls back to the gradient imageTone when unset. */
+  image?: string;
 };
 
 export const featuredStories: Story[] = [
@@ -105,6 +107,7 @@ export type Person = {
   era: string;
   imageTone: "crimson" | "amber" | "stone" | "slate";
   bio?: string;
+  image?: string;
 };
 
 export const people: Person[] = [
@@ -172,6 +175,7 @@ export type Place = {
   region: string;
   description: string;
   imageTone: "crimson" | "amber" | "stone" | "slate";
+  image?: string;
 };
 
 export const places: Place[] = [

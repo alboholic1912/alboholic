@@ -7,7 +7,7 @@ export default function StoryCard({ story }: { story: Story }) {
   return (
     <Link href={`/stories/${story.slug}`} className={styles.card}>
       <div className={styles.media}>
-        <ImagePlaceholder tone={story.imageTone} aiImage={story.aiImage} />
+        <ImagePlaceholder tone={story.imageTone} aiImage={story.aiImage} src={story.image} alt={story.title} />
       </div>
       <div className={styles.body}>
         <span className={styles.category}>{story.category}</span>
