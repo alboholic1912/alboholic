@@ -1,0 +1,25 @@
+## Design Clarification
+
+For now, we will use the design shown in **“ChatGPT Image Sep 23, 2026, 12_41_33 PM.png”** as the main design template.
+
+The homepage will also include the following sections:
+
+* **Latest Stories**
+* **Meet the People**
+* **Explore by Period**
+
+Every article and story should include a featured image. These images will also be displayed on the article/story cards throughout the homepage and other relevant parts of the platform.
+
+Most of these visuals will be **AI-generated images**. Whenever an AI-generated image is used, the platform should display a small **information/notice icon (!)** that users can interact with to learn more.
+
+The notice should clearly explain that the image was generated using AI and is used **for illustrative purposes only**. AI-generated imagery should not be presented as authentic historical photography or used in a way that misrepresents people, events, places, or historical facts.
+
+### Mobile & Responsive Design
+
+Mobile design is **just as important as desktop design, if not more important**.
+
+Achieving excellent responsiveness across different screen sizes is a major requirement of the project. The goal should be to make the experience feel polished and intentional on mobile rather than simply creating a smaller version of the desktop website.
+
+For now, ALBOHOLIC will **not have a native mobile application**. Because of this, the mobile web experience should be designed to **look and feel as close to a native app as possible**, while still functioning as a responsive web application.
+
+The platform should therefore be designed **mobile-first**, with particular attention to navigation, typography, image sizing, touch interactions, spacing, article readability, and overall performance.
