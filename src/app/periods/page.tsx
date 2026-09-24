@@ -1,15 +1,19 @@
 import type { Metadata } from "next";
 import PageIntro from "@/components/PageIntro/PageIntro";
 import PeriodCard from "@/components/PeriodCard/PeriodCard";
-import { periods } from "@/lib/mockData";
+import { getPeriods } from "@/lib/content/public";
 import styles from "./periods.module.css";
+
+export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: "Periods — Alboholic",
   description: "Albanian history organized by era, from the ancient Illyrians to modern Albania.",
 };
 
-export default function PeriodsPage() {
+export default async function PeriodsPage() {
+  const periods = await getPeriods();
+
   return (
     <div className="container">
       <PageIntro

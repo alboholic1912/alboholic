@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { Period } from "@/lib/mockData";
+import type { Period } from "@/lib/content/public";
 import styles from "./PeriodCard.module.css";
 
 export default function PeriodCard({ period }: { period: Period }) {

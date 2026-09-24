@@ -1,16 +1,18 @@
 import type { Metadata } from "next";
 import PageIntro from "@/components/PageIntro/PageIntro";
 import StoryCard from "@/components/StoryCard/StoryCard";
-import { getAllStories } from "@/lib/mockData";
+import { getAllStories } from "@/lib/content/public";
 import styles from "./stories.module.css";
+
+export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: "Stories — Alboholic",
   description: "Stories from Albanian history, from the ancient Illyrians to modern Albania.",
 };
 
-export default function StoriesPage() {
-  const stories = getAllStories();
+export default async function StoriesPage() {
+  const stories = await getAllStories();
 
   return (
     <div className="container">

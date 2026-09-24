@@ -1,9 +1,11 @@
 import Link from "next/link";
 import SectionHeading from "@/components/SectionHeading/SectionHeading";
-import { periods } from "@/lib/mockData";
+import { getPeriods } from "@/lib/content/public";
 import styles from "./PeriodsSection.module.css";
 
-export default function PeriodsSection() {
+export default async function PeriodsSection() {
+  const periods = await getPeriods();
+
   return (
     <section className={styles.section}>
       <div className="container">

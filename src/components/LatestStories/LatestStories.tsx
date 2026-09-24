@@ -1,9 +1,11 @@
 import SectionHeading from "@/components/SectionHeading/SectionHeading";
 import StoryCard from "@/components/StoryCard/StoryCard";
-import { latestStories } from "@/lib/mockData";
+import { getLatestStories } from "@/lib/content/public";
 import styles from "./LatestStories.module.css";
 
-export default function LatestStories() {
+export default async function LatestStories() {
+  const latestStories = await getLatestStories();
+
   return (
     <section className={styles.section}>
       <div className="container">

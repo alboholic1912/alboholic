@@ -1,6 +1,6 @@
 import Link from "next/link";
 import ImagePlaceholder from "@/components/ImagePlaceholder/ImagePlaceholder";
-import type { Story } from "@/lib/mockData";
+import type { Story } from "@/lib/content/public";
 import styles from "./StoryCard.module.css";
 
 export default function StoryCard({ story }: { story: Story }) {

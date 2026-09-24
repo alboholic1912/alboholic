@@ -2,18 +2,20 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import BackLink from "@/components/BackLink/BackLink";
 import ImagePlaceholder from "@/components/ImagePlaceholder/ImagePlaceholder";
-import { getPlaceBySlug, places } from "@/lib/mockData";
+import { getPlaceBySlug, getPlaces } from "@/lib/content/public";
 import styles from "./place.module.css";
 
-export function generateStaticParams() {
-  return places.map((place) => ({ slug: place.slug }));
+export const revalidate = 60;
+
+export async function generateStaticParams() {
+  return (await getPlaces()).map((place) => ({ slug: place.slug }));
 }
 
 export async function generateMetadata({
   params,
 }: PageProps<"/places/[slug]">): Promise<Metadata> {
   const { slug } = await params;
-  const place = getPlaceBySlug(slug);
+  const place = await getPlaceBySlug(slug);
 
   if (!place) {
     return { title: "Place not found — Alboholic" };
@@ -27,7 +29,7 @@ export async function generateMetadata({
 
 export default async function PlacePage({ params }: PageProps<"/places/[slug]">) {
   const { slug } = await params;
-  const place = getPlaceBySlug(slug);
+  const place = await getPlaceBySlug(slug);
 
   if (!place) {
     notFound();

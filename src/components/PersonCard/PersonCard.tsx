@@ -1,6 +1,6 @@
 import Link from "next/link";
 import ImagePlaceholder from "@/components/ImagePlaceholder/ImagePlaceholder";
-import type { Person } from "@/lib/mockData";
+import type { Person } from "@/lib/content/public";
 import styles from "./PersonCard.module.css";
 
 export default function PersonCard({ person }: { person: Person }) {

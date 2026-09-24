@@ -1,18 +1,20 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import BackLink from "@/components/BackLink/BackLink";
-import { getPeriodBySlug, periods } from "@/lib/mockData";
+import { getPeriodBySlug, getPeriods } from "@/lib/content/public";
 import styles from "./period.module.css";
 
-export function generateStaticParams() {
-  return periods.map((period) => ({ slug: period.slug }));
+export const revalidate = 60;
+
+export async function generateStaticParams() {
+  return (await getPeriods()).map((period) => ({ slug: period.slug }));
 }
 
 export async function generateMetadata({
   params,
 }: PageProps<"/periods/[slug]">): Promise<Metadata> {
   const { slug } = await params;
-  const period = getPeriodBySlug(slug);
+  const period = await getPeriodBySlug(slug);
 
   if (!period) {
     return { title: "Period not found — Alboholic" };
@@ -26,7 +28,7 @@ export async function generateMetadata({
 
 export default async function PeriodPage({ params }: PageProps<"/periods/[slug]">) {
   const { slug } = await params;
-  const period = getPeriodBySlug(slug);
+  const period = await getPeriodBySlug(slug);
 
   if (!period) {
     notFound();

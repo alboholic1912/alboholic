@@ -1,6 +1,6 @@
 import Link from "next/link";
 import ImagePlaceholder from "@/components/ImagePlaceholder/ImagePlaceholder";
-import type { Place } from "@/lib/mockData";
+import type { Place } from "@/lib/content/public";
 import styles from "./PlaceCard.module.css";
 
 export default function PlaceCard({ place }: { place: Place }) {

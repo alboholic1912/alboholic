@@ -1,10 +1,12 @@
 import Link from "next/link";
 import ImagePlaceholder from "@/components/ImagePlaceholder/ImagePlaceholder";
 import SectionHeading from "@/components/SectionHeading/SectionHeading";
-import { people } from "@/lib/mockData";
+import { getPeople } from "@/lib/content/public";
 import styles from "./PeopleSection.module.css";
 
-export default function PeopleSection() {
+export default async function PeopleSection() {
+  const people = await getPeople();
+
   return (
     <section className={styles.section}>
       <div className="container">

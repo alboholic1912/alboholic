@@ -4,18 +4,20 @@ import BackLink from "@/components/BackLink/BackLink";
 import ImagePlaceholder from "@/components/ImagePlaceholder/ImagePlaceholder";
 import SectionHeading from "@/components/SectionHeading/SectionHeading";
 import StoryCard from "@/components/StoryCard/StoryCard";
-import { getAllStories, getStoryBySlug } from "@/lib/mockData";
+import { getAllStories, getStoryBySlug } from "@/lib/content/public";
 import styles from "./story.module.css";
 
-export function generateStaticParams() {
-  return getAllStories().map((story) => ({ slug: story.slug }));
+export const revalidate = 60;
+
+export async function generateStaticParams() {
+  return (await getAllStories()).map((story) => ({ slug: story.slug }));
 }
 
 export async function generateMetadata({
   params,
 }: PageProps<"/stories/[slug]">): Promise<Metadata> {
   const { slug } = await params;
-  const story = getStoryBySlug(slug);
+  const story = await getStoryBySlug(slug);
 
   if (!story) {
     return { title: "Story not found — Alboholic" };
@@ -29,13 +31,13 @@ export async function generateMetadata({
 
 export default async function StoryPage({ params }: PageProps<"/stories/[slug]">) {
   const { slug } = await params;
-  const story = getStoryBySlug(slug);
+  const story = await getStoryBySlug(slug);
 
   if (!story) {
     notFound();
   }
 
-  const related = getAllStories()
+  const related = (await getAllStories())
     .filter((item) => item.slug !== story.slug)
     .slice(0, 3);
 
