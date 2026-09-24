@@ -1,0 +1,43 @@
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding-block: var(--space-5) var(--space-3);
+}
+
+.range {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-accent-bright);
+}
+
+.name {
+  font-family: var(--font-serif);
+  font-size: clamp(28px, 5vw, 40px);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.prose {
+  max-width: 60ch;
+  padding-block: var(--space-3) var(--space-8);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--color-text-muted);
+}
+
+.placeholder {
+  font-style: italic;
+  color: var(--color-text-dim);
+}
+
+@media (min-width: 960px) {
+  .header {
+    padding-block: var(--space-7) var(--space-4);
+  }
+}

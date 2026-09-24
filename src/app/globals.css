@@ -1,13 +1,37 @@
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+  --color-bg: #050303;
+  --color-bg-elev: #0d0a0a;
+  --color-bg-elev-2: #171212;
+  --color-border: #26191a;
+  --color-border-soft: #1a1112;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-text: #f6f3f1;
+  --color-text-muted: #a3a19d;
+  --color-text-dim: #77716d;
+
+  --color-accent: #b8181c;
+  --color-accent-bright: #ef4045;
+  --color-accent-dark: #7a1013;
+  --color-accent-gradient: linear-gradient(135deg, #c81f22 0%, #8c1013 100%);
+
+  --font-sans: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+  --font-serif: var(--font-display), Georgia, "Times New Roman", serif;
+
+  --container-max: 1240px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+
+  color-scheme: dark;
 }
 
 html {
@@ -24,9 +48,9 @@ body {
   min-height: 100%;
   display: flex;
   flex-direction: column;
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  color: var(--color-text);
+  background: var(--color-bg);
+  font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -42,8 +66,38 @@ a {
   text-decoration: none;
 }
 
-@media (prefers-color-scheme: dark) {
-  html {
-    color-scheme: dark;
+button {
+  font: inherit;
+  color: inherit;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+ul {
+  list-style: none;
+}
+
+.container {
+  width: 100%;
+  max-width: var(--container-max);
+  margin-inline: auto;
+  padding-inline: var(--space-4);
+}
+
+@media (min-width: 768px) {
+  .container {
+    padding-inline: var(--space-6);
   }
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
 }
