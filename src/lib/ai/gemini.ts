@@ -39,6 +39,28 @@ function describeError(context: string, err: unknown): Error {
   return new Error(`${context} failed — ${detail}`);
 }
 
+const RETRYABLE_STATUSES = new Set([429, 503]);
+
+// Gemini occasionally returns 503 UNAVAILABLE ("high demand") or 429
+// RESOURCE_EXHAUSTED for a moment even when the account has quota. Both are
+// transient, so retry a couple of times with backoff before giving up.
+async function withRetries<T>(context: string, fn: () => Promise<T>): Promise<T> {
+  const delaysMs = [2000, 5000];
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return await fn();
+    } catch (err) {
+      const retryable = err instanceof ApiError && RETRYABLE_STATUSES.has(err.status);
+      if (!retryable || attempt >= delaysMs.length) throw err;
+      const delay = delaysMs[attempt];
+      console.error(
+        `[gemini] ${context} hit a transient error (status ${(err as ApiError).status}), retrying in ${delay}ms (attempt ${attempt + 1}/${delaysMs.length})`
+      );
+      await new Promise((resolve) => setTimeout(resolve, delay));
+    }
+  }
+}
+
 async function waitForFileActive(name: string) {
   const ai = getClient();
   for (let attempt = 0; attempt < 20; attempt++) {
@@ -81,13 +103,15 @@ export async function buildSourceParts(
     } else {
       let uploaded;
       try {
-        uploaded = await ai.files.upload({
-          file: source.file,
-          config: {
-            mimeType: source.file.type || "application/pdf",
-            displayName: source.file.name,
-          },
-        });
+        uploaded = await withRetries(`Uploading "${source.file.name}"`, () =>
+          ai.files.upload({
+            file: source.file,
+            config: {
+              mimeType: source.file.type || "application/pdf",
+              displayName: source.file.name,
+            },
+          })
+        );
       } catch (err) {
         throw describeError(`Uploading "${source.file.name}" to Gemini`, err);
       }
@@ -125,21 +149,23 @@ export async function generateStructuredContent<T>({
 
   let response;
   try {
-    response = await ai.models.generateContent({
-      model: MODEL,
-      contents: [
-        {
-          role: "user",
-          parts: [...sourceParts, { text: typeInstruction }],
+    response = await withRetries("Generating content with Gemini", () =>
+      ai.models.generateContent({
+        model: MODEL,
+        contents: [
+          {
+            role: "user",
+            parts: [...sourceParts, { text: typeInstruction }],
+          },
+        ],
+        config: {
+          systemInstruction: GROUNDING_INSTRUCTION,
+          responseMimeType: "application/json",
+          responseSchema,
+          temperature: 0.2,
         },
-      ],
-      config: {
-        systemInstruction: GROUNDING_INSTRUCTION,
-        responseMimeType: "application/json",
-        responseSchema,
-        temperature: 0.2,
-      },
-    });
+      })
+    );
   } catch (err) {
     throw describeError("Generating content with Gemini", err);
   }
