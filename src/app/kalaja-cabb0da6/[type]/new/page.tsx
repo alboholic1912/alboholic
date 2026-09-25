@@ -7,6 +7,12 @@ import { isContentType } from "@/lib/content/types";
 import BackLink from "@/components/BackLink/BackLink";
 import styles from "../../studio.module.css";
 
+// Gemini generation (plus polling for uploaded PDFs/videos) can run close to
+// a minute. Vercel's default Server Action timeout is 10s (Hobby) / 15s (Pro),
+// so without this the request gets killed mid-generation in production even
+// though it works locally, where there's no such limit.
+export const maxDuration = 60;
+
 export async function generateMetadata({
   params,
 }: PageProps<"/kalaja-cabb0da6/[type]/new">): Promise<Metadata> {
