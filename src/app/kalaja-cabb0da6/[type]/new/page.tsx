@@ -26,12 +26,14 @@ export async function generateMetadata({
 
 export default async function NewContentPage({
   params,
+  searchParams,
 }: PageProps<"/kalaja-cabb0da6/[type]/new">) {
   await requireUser();
 
   const { type } = await params;
   if (!isContentType(type)) notFound();
   const config = CONTENT_CONFIG[type];
+  const { error } = await searchParams;
 
   return (
     <div className={styles.wrap}>
@@ -42,6 +44,8 @@ export default async function NewContentPage({
       <h1 className={styles.title} style={{ marginBottom: "var(--space-6)" }}>
         Generate a new {config.label.toLowerCase()}
       </h1>
+
+      {error && <div className={styles.error} style={{ marginBottom: "var(--space-5)" }}>{error}</div>}
 
       <form action={generateContent} className={styles.form}>
         <input type="hidden" name="type" value={type} />

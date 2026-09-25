@@ -1,6 +1,6 @@
 "use server";
 
-import { redirect } from "next/navigation";
+import { redirect, unstable_rethrow } from "next/navigation";
 import { requireUser } from "@/lib/supabase/dal";
 import { createClient } from "@/lib/supabase/server";
 import { uploadImage } from "@/lib/supabase/storage";
@@ -50,52 +50,59 @@ export async function generateContent(formData: FormData) {
   const type = typeValue;
   const config = CONTENT_CONFIG[type];
 
-  const rawText = String(formData.get("rawText") ?? "").trim();
-  const youtubeUrls = String(formData.get("youtubeUrls") ?? "")
-    .split("\n")
-    .map((line) => line.trim())
-    .filter(Boolean);
-  const files = formData.getAll("files").filter((f): f is File => f instanceof File && f.size > 0);
+  try {
+    const rawText = String(formData.get("rawText") ?? "").trim();
+    const youtubeUrls = String(formData.get("youtubeUrls") ?? "")
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean);
+    const files = formData.getAll("files").filter((f): f is File => f instanceof File && f.size > 0);
 
-  const sources: SourceInput[] = [];
-  if (rawText) sources.push({ kind: "text", label: "Pasted text", value: rawText });
-  for (const url of youtubeUrls) sources.push({ kind: "youtube", url });
-  for (const file of files) sources.push({ kind: "file", file });
+    const sources: SourceInput[] = [];
+    if (rawText) sources.push({ kind: "text", label: "Pasted text", value: rawText });
+    for (const url of youtubeUrls) sources.push({ kind: "youtube", url });
+    for (const file of files) sources.push({ kind: "file", file });
 
-  if (sources.length === 0) {
-    throw new Error("Add at least one source: text, a PDF, or a YouTube URL.");
+    if (sources.length === 0) {
+      throw new Error("Add at least one source: text, a PDF, or a YouTube URL.");
+    }
+
+    const { parts, record } = await buildSourceParts(sources);
+
+    const generated = await generateStructuredContent<Record<string, unknown>>({
+      typeInstruction: config.aiInstruction,
+      sourceParts: parts,
+      responseSchema: config.aiSchema,
+    });
+
+    const row: Record<string, unknown> = { ...config.defaults, sources: record, status: "review" };
+
+    for (const [key, value] of Object.entries(generated)) {
+      const column = key === "imageTone" ? "image_tone" : key;
+      row[column] = value;
+    }
+
+    if (type === "stories" && Array.isArray(row.body)) {
+      row.read_time = estimateReadTime(row.body as string[]);
+    }
+
+    const title = String(row[config.titleField] ?? "untitled");
+    row.slug = await uniqueSlug(type, title);
+
+    const supabase = await createClient();
+    const { data, error } = await supabase.from(type).insert(row).select("id").single();
+
+    if (error) {
+      throw new Error(`Could not save the generated ${config.label.toLowerCase()}: ${error.message}`);
+    }
+
+    redirect(`${ADMIN_PATH}/${type}/${data.id}`);
+  } catch (err) {
+    unstable_rethrow(err);
+    console.error(`[generateContent] type=${type} failed:`, err);
+    const message = err instanceof Error ? err.message : "Something went wrong while generating content.";
+    redirect(`${ADMIN_PATH}/${type}/new?error=${encodeURIComponent(message)}`);
   }
-
-  const { parts, record } = await buildSourceParts(sources);
-
-  const generated = await generateStructuredContent<Record<string, unknown>>({
-    typeInstruction: config.aiInstruction,
-    sourceParts: parts,
-    responseSchema: config.aiSchema,
-  });
-
-  const row: Record<string, unknown> = { ...config.defaults, sources: record, status: "review" };
-
-  for (const [key, value] of Object.entries(generated)) {
-    const column = key === "imageTone" ? "image_tone" : key;
-    row[column] = value;
-  }
-
-  if (type === "stories" && Array.isArray(row.body)) {
-    row.read_time = estimateReadTime(row.body as string[]);
-  }
-
-  const title = String(row[config.titleField] ?? "untitled");
-  row.slug = await uniqueSlug(type, title);
-
-  const supabase = await createClient();
-  const { data, error } = await supabase.from(type).insert(row).select("id").single();
-
-  if (error) {
-    throw new Error(`Could not save the generated ${config.label.toLowerCase()}: ${error.message}`);
-  }
-
-  redirect(`${ADMIN_PATH}/${type}/${data.id}`);
 }
 
 export async function updateContent(formData: FormData) {
