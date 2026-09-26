@@ -3,6 +3,7 @@ import { requireUser } from "@/lib/supabase/dal";
 import { createClient } from "@/lib/supabase/server";
 import type { IdeaRow } from "@/lib/content/types";
 import BackLink from "@/components/BackLink/BackLink";
+import SubmitButton from "@/components/SubmitButton/SubmitButton";
 import { createIdea, updateIdeaStatus, deleteIdea } from "./actions";
 import styles from "../studio.module.css";
 
@@ -45,9 +46,12 @@ export default async function IdeasPage() {
           <textarea id="notes" name="notes" rows={4} />
         </div>
         <div className={styles.actions}>
-          <button type="submit" className={`${styles.button} ${styles.buttonPrimary}`}>
+          <SubmitButton
+            className={`${styles.button} ${styles.buttonPrimary}`}
+            pendingText="Adding…"
+          >
             Add idea
-          </button>
+          </SubmitButton>
         </div>
       </form>
 
@@ -71,15 +75,18 @@ export default async function IdeasPage() {
                       </option>
                     ))}
                   </select>
-                  <button type="submit" className={styles.button}>
+                  <SubmitButton className={styles.button} pendingText="Updating…">
                     Update
-                  </button>
+                  </SubmitButton>
                 </form>
                 <form action={deleteIdea}>
                   <input type="hidden" name="id" value={idea.id} />
-                  <button type="submit" className={`${styles.button} ${styles.buttonDanger}`}>
+                  <SubmitButton
+                    className={`${styles.button} ${styles.buttonDanger}`}
+                    pendingText="Deleting…"
+                  >
                     Delete
-                  </button>
+                  </SubmitButton>
                 </form>
               </div>
             </div>

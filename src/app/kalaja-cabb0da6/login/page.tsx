@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { login } from "./actions";
+import SubmitButton from "@/components/SubmitButton/SubmitButton";
 import styles from "./login.module.css";
 
 export const metadata: Metadata = {
@@ -32,9 +33,9 @@ export default async function StudioLoginPage({
               required
             />
           </div>
-          <button className={styles.submit} type="submit">
+          <SubmitButton className={styles.submit} pendingText="Signing in…">
             Sign in
-          </button>
+          </SubmitButton>
         </form>
       </div>
     </div>

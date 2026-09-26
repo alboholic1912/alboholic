@@ -7,6 +7,7 @@ import { updateContent, publishContent, unpublishContent, deleteContent } from "
 import { CONTENT_CONFIG, type FieldDef } from "@/lib/content/config";
 import { isContentType, type SourceRecord } from "@/lib/content/types";
 import BackLink from "@/components/BackLink/BackLink";
+import SubmitButton from "@/components/SubmitButton/SubmitButton";
 import styles from "../../studio.module.css";
 
 const TYPES_WITH_IMAGE = new Set(["stories", "people", "places"]);
@@ -97,9 +98,12 @@ export default async function EditContentPage({
         {config.fields.map((field) => renderField(field, record))}
 
         <div className={styles.actions}>
-          <button type="submit" className={`${styles.button} ${styles.buttonPrimary}`}>
+          <SubmitButton
+            className={`${styles.button} ${styles.buttonPrimary}`}
+            pendingText="Saving…"
+          >
             Save changes
-          </button>
+          </SubmitButton>
         </div>
       </form>
 
@@ -108,25 +112,31 @@ export default async function EditContentPage({
           <form action={unpublishContent}>
             <input type="hidden" name="type" value={type} />
             <input type="hidden" name="id" value={id} />
-            <button type="submit" className={styles.button}>
+            <SubmitButton className={styles.button} pendingText="Unpublishing…">
               Unpublish
-            </button>
+            </SubmitButton>
           </form>
         ) : (
           <form action={publishContent}>
             <input type="hidden" name="type" value={type} />
             <input type="hidden" name="id" value={id} />
-            <button type="submit" className={`${styles.button} ${styles.buttonPrimary}`}>
+            <SubmitButton
+              className={`${styles.button} ${styles.buttonPrimary}`}
+              pendingText="Publishing…"
+            >
               Publish to site
-            </button>
+            </SubmitButton>
           </form>
         )}
         <form action={deleteContent}>
           <input type="hidden" name="type" value={type} />
           <input type="hidden" name="id" value={id} />
-          <button type="submit" className={`${styles.button} ${styles.buttonDanger}`}>
+          <SubmitButton
+            className={`${styles.button} ${styles.buttonDanger}`}
+            pendingText="Deleting…"
+          >
             Delete
-          </button>
+          </SubmitButton>
         </form>
       </div>
     </div>

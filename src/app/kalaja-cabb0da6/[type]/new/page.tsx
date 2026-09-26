@@ -5,6 +5,7 @@ import { generateContent } from "@/lib/content/actions";
 import { CONTENT_CONFIG } from "@/lib/content/config";
 import { isContentType } from "@/lib/content/types";
 import BackLink from "@/components/BackLink/BackLink";
+import SubmitButton from "@/components/SubmitButton/SubmitButton";
 import styles from "../../studio.module.css";
 
 // Gemini generation (plus polling for uploaded PDFs/videos) can run close to
@@ -80,9 +81,12 @@ export default async function NewContentPage({
         </div>
 
         <div className={styles.actions}>
-          <button type="submit" className={`${styles.button} ${styles.buttonPrimary}`}>
+          <SubmitButton
+            className={`${styles.button} ${styles.buttonPrimary}`}
+            pendingText="Generating…"
+          >
             Generate {config.label.toLowerCase()}
-          </button>
+          </SubmitButton>
         </div>
         <p className={styles.help}>This can take up to a minute, especially with video sources.</p>
       </form>

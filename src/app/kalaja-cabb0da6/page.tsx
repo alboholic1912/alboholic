@@ -5,6 +5,7 @@ import { countsByStatus, listContent } from "@/lib/content/data";
 import { CONTENT_CONFIG } from "@/lib/content/config";
 import { CONTENT_TYPES } from "@/lib/content/types";
 import { signOut } from "./actions";
+import SubmitButton from "@/components/SubmitButton/SubmitButton";
 import styles from "./studio.module.css";
 
 export const metadata: Metadata = {
@@ -34,9 +35,9 @@ export default async function StudioPage() {
           <p className={styles.meta}>Signed in as {user.email}</p>
         </div>
         <form action={signOut}>
-          <button className={styles.signOut} type="submit">
+          <SubmitButton className={styles.signOut} pendingText="Signing out…">
             Sign out
-          </button>
+          </SubmitButton>
         </form>
       </div>
 
