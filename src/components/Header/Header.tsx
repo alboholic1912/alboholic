@@ -19,6 +19,10 @@ export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
   const pathname = usePathname();
 
+  if (pathname?.startsWith("/kalaja-cabb0da6")) {
+    return null;
+  }
+
   return (
     <header className={styles.header}>
       <div className={`container ${styles.bar}`}>
