@@ -1,5 +1,7 @@
-import { Type, type Schema } from "@google/genai";
 import type { ContentType, ImageTone } from "./types";
+
+// JSON Schema objects sent to Claude as the structured-output format.
+type JsonSchema = Record<string, unknown>;
 
 const IMAGE_TONES: ImageTone[] = ["crimson", "amber", "stone", "slate"];
 
@@ -21,16 +23,16 @@ export interface ContentTypeConfig {
   titleField: string;
   /** Fields shown on the review/edit page, in order. */
   fields: FieldDef[];
-  /** Instruction appended after the sources, telling Gemini what to produce. */
+  /** Instruction appended after the sources, telling Claude what to produce. */
   aiInstruction: string;
-  /** JSON schema Gemini must return. */
-  aiSchema: Schema;
+  /** JSON schema Claude must return. */
+  aiSchema: JsonSchema;
   /** Default row values for a freshly generated item, before the AI output is merged in. */
   defaults: Record<string, unknown>;
 }
 
-const imageToneSchema: Schema = {
-  type: Type.STRING,
+const imageToneSchema: JsonSchema = {
+  type: "string",
   enum: IMAGE_TONES,
   description: "The mood/color tone that best fits this content.",
 };
@@ -56,15 +58,16 @@ export const CONTENT_CONFIG: Record<ContentType, ContentTypeConfig> = {
       "sentence excerpt, and a body made of 3-6 paragraphs telling the story in full, all grounded strictly " +
       "in the sources above. Also suggest an image_tone that fits the mood.",
     aiSchema: {
-      type: Type.OBJECT,
+      type: "object",
       properties: {
-        category: { type: Type.STRING },
-        title: { type: Type.STRING },
-        excerpt: { type: Type.STRING },
-        body: { type: Type.ARRAY, items: { type: Type.STRING } },
+        category: { type: "string" },
+        title: { type: "string" },
+        excerpt: { type: "string" },
+        body: { type: "array", items: { type: "string" } },
         imageTone: imageToneSchema,
       },
       required: ["category", "title", "excerpt", "body", "imageTone"],
+      additionalProperties: false,
     },
     defaults: { ai_image: false, featured: false, image_tone: "stone", date: new Date().toISOString().slice(0, 10) },
   },
@@ -85,15 +88,16 @@ export const CONTENT_CONFIG: Record<ContentType, ContentTypeConfig> = {
       "active years, as given in the sources), and a short bio of 2-4 sentences, grounded strictly in the " +
       "sources above. Also suggest an image_tone that fits the mood.",
     aiSchema: {
-      type: Type.OBJECT,
+      type: "object",
       properties: {
-        name: { type: Type.STRING },
-        role: { type: Type.STRING },
-        era: { type: Type.STRING },
-        bio: { type: Type.STRING },
+        name: { type: "string" },
+        role: { type: "string" },
+        era: { type: "string" },
+        bio: { type: "string" },
         imageTone: imageToneSchema,
       },
       required: ["name", "role", "era", "bio", "imageTone"],
+      additionalProperties: false,
     },
     defaults: { image_tone: "stone" },
   },
@@ -112,13 +116,14 @@ export const CONTENT_CONFIG: Record<ContentType, ContentTypeConfig> = {
       "Produce an entry for the Periods section: a short period name, its date range as given in the " +
       "sources, and a one-to-two sentence description, grounded strictly in the sources above.",
     aiSchema: {
-      type: Type.OBJECT,
+      type: "object",
       properties: {
-        name: { type: Type.STRING },
-        range: { type: Type.STRING },
-        description: { type: Type.STRING },
+        name: { type: "string" },
+        range: { type: "string" },
+        description: { type: "string" },
       },
       required: ["name", "range", "description"],
+      additionalProperties: false,
     },
     defaults: { sort_order: 0 },
   },
@@ -137,14 +142,15 @@ export const CONTENT_CONFIG: Record<ContentType, ContentTypeConfig> = {
       "Produce an entry for the Places section: place name, its region, and a one-to-two sentence " +
       "description, grounded strictly in the sources above. Also suggest an image_tone that fits the mood.",
     aiSchema: {
-      type: Type.OBJECT,
+      type: "object",
       properties: {
-        name: { type: Type.STRING },
-        region: { type: Type.STRING },
-        description: { type: Type.STRING },
+        name: { type: "string" },
+        region: { type: "string" },
+        description: { type: "string" },
         imageTone: imageToneSchema,
       },
       required: ["name", "region", "description", "imageTone"],
+      additionalProperties: false,
     },
     defaults: { image_tone: "stone" },
   },

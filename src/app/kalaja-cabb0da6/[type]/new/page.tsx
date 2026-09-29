@@ -3,12 +3,13 @@ import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/supabase/dal";
 import { generateContent } from "@/lib/content/actions";
 import { CONTENT_CONFIG } from "@/lib/content/config";
+import { AI_MODELS, DEFAULT_AI_MODEL } from "@/lib/ai/models";
 import { isContentType } from "@/lib/content/types";
 import BackLink from "@/components/BackLink/BackLink";
 import SubmitButton from "@/components/SubmitButton/SubmitButton";
 import styles from "../../studio.module.css";
 
-// Gemini generation (plus polling for uploaded PDFs/videos) can run close to
+// Claude generation (especially Sonnet with large PDFs) can run close to
 // a minute. Vercel's default Server Action timeout is 10s (Hobby) / 15s (Pro),
 // so without this the request gets killed mid-generation in production even
 // though it works locally, where there's no such limit.
@@ -54,8 +55,7 @@ export default async function NewContentPage({
         <div className={styles.section}>
           <div className={styles.sectionTitle}>Sources</div>
           <p className={styles.help}>
-            The AI will use only what you give it here — books, papers, notes, PDFs, and YouTube
-            videos. It will not invent facts that aren&apos;t in these sources.
+            The AI will use only what you give it here — books, papers, notes, and PDFs. It will not invent facts that aren&apos;t in these sources.
           </p>
 
           <div className={styles.field}>
@@ -64,19 +64,22 @@ export default async function NewContentPage({
           </div>
 
           <div className={styles.field}>
-            <label htmlFor="youtubeUrls">YouTube URLs</label>
-            <textarea
-              id="youtubeUrls"
-              name="youtubeUrls"
-              rows={3}
-              placeholder={"One per line, e.g.\nhttps://www.youtube.com/watch?v=..."}
-            />
-            <span className={styles.help}>The AI watches the full video — one URL per line.</span>
-          </div>
-
-          <div className={styles.field}>
             <label htmlFor="files">PDFs / documents</label>
             <input id="files" name="files" type="file" accept=".pdf,.txt,application/pdf,text/plain" multiple />
+          </div>
+        </div>
+
+        <div className={styles.section}>
+          <div className={styles.sectionTitle}>AI model</div>
+          <div className={styles.field}>
+            <label htmlFor="model">Generate with</label>
+            <select id="model" name="model" defaultValue={DEFAULT_AI_MODEL}>
+              {AI_MODELS.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.label} — {m.description}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
 
@@ -88,7 +91,7 @@ export default async function NewContentPage({
             Generate {config.label.toLowerCase()}
           </SubmitButton>
         </div>
-        <p className={styles.help}>This can take up to a minute, especially with video sources.</p>
+        <p className={styles.help}>This can take up to a minute.</p>
       </form>
     </div>
   );

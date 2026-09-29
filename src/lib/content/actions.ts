@@ -4,7 +4,9 @@ import { redirect, unstable_rethrow } from "next/navigation";
 import { requireUser } from "@/lib/supabase/dal";
 import { createClient } from "@/lib/supabase/server";
 import { uploadImage } from "@/lib/supabase/storage";
-import { buildSourceParts, generateStructuredContent, type SourceInput } from "@/lib/ai/gemini";
+import { buildSourceBlocks, generateStructuredContent, type SourceInput } from "@/lib/ai/anthropic";
+import { DEFAULT_AI_MODEL, getAiModel } from "@/lib/ai/models";
+import { logUsage } from "@/lib/ai/usage";
 import { CONTENT_CONFIG } from "./config";
 import { isContentType, type ContentType } from "./types";
 import { slugify } from "./slug";
@@ -52,28 +54,27 @@ export async function generateContent(formData: FormData) {
 
   try {
     const rawText = String(formData.get("rawText") ?? "").trim();
-    const youtubeUrls = String(formData.get("youtubeUrls") ?? "")
-      .split("\n")
-      .map((line) => line.trim())
-      .filter(Boolean);
+    // Only allow known models so a crafted request can't pick an arbitrary (expensive) one.
+    const model = getAiModel(String(formData.get("model") ?? ""))?.id ?? DEFAULT_AI_MODEL;
     const files = formData.getAll("files").filter((f): f is File => f instanceof File && f.size > 0);
 
     const sources: SourceInput[] = [];
     if (rawText) sources.push({ kind: "text", label: "Pasted text", value: rawText });
-    for (const url of youtubeUrls) sources.push({ kind: "youtube", url });
     for (const file of files) sources.push({ kind: "file", file });
 
     if (sources.length === 0) {
-      throw new Error("Add at least one source: text, a PDF, or a YouTube URL.");
+      throw new Error("Add at least one source: text or a PDF.");
     }
 
-    const { parts, record } = await buildSourceParts(sources);
+    const { blocks, record } = await buildSourceBlocks(sources);
 
-    const generated = await generateStructuredContent<Record<string, unknown>>({
+    const { data: generated, usage } = await generateStructuredContent<Record<string, unknown>>({
+      model,
       typeInstruction: config.aiInstruction,
-      sourceParts: parts,
-      responseSchema: config.aiSchema,
+      sourceBlocks: blocks,
+      jsonSchema: config.aiSchema,
     });
+    await logUsage(type, usage);
 
     const row: Record<string, unknown> = { ...config.defaults, sources: record, status: "review" };
 

@@ -5,6 +5,8 @@ import { requireUser } from "@/lib/supabase/dal";
 import { countsByStatus, listContent } from "@/lib/content/data";
 import { CONTENT_CONFIG } from "@/lib/content/config";
 import { CONTENT_TYPES, type ContentType } from "@/lib/content/types";
+import { getAiModel } from "@/lib/ai/models";
+import { getUsageSummary } from "@/lib/ai/usage";
 import { BookIcon, UsersIcon, ClockIcon, PinIcon, BulbIcon, PlusIcon } from "@/components/StudioShell/icons";
 import styles from "./studio.module.css";
 
@@ -22,7 +24,7 @@ const TYPE_ICONS: Record<ContentType, () => JSX.Element> = {
 
 export default async function StudioPage() {
   await requireUser();
-  const counts = await countsByStatus();
+  const [counts, usage] = await Promise.all([countsByStatus(), getUsageSummary()]);
 
   const reviewQueues = await Promise.all(
     CONTENT_TYPES.map(async (type) => ({
@@ -158,6 +160,54 @@ export default async function StudioPage() {
           </div>
         </section>
       </div>
+
+      <section className={styles.panel} style={{ marginTop: "var(--space-4)" }}>
+        <div className={styles.panelHeader}>
+          <h2 className={styles.sectionTitle}>AI usage</h2>
+        </div>
+        {usage === null ? (
+          <p className={styles.empty}>
+            Usage tracking isn&apos;t set up yet — run <code>supabase/ai_usage.sql</code> in the
+            Supabase SQL editor.
+          </p>
+        ) : usage.allTime.generations === 0 ? (
+          <p className={styles.empty}>No generations logged yet.</p>
+        ) : (
+          <div className={styles.totalsList}>
+            {[
+              { label: "This month", bucket: usage.month },
+              { label: "All time", bucket: usage.allTime },
+            ].map(({ label, bucket }) => (
+              <div key={label} className={styles.totalsRow}>
+                <span>
+                  {label} · {bucket.generations} generation{bucket.generations === 1 ? "" : "s"} ·{" "}
+                  {formatTokens(bucket.inputTokens)} in / {formatTokens(bucket.outputTokens)} out
+                </span>
+                <span className={styles.totalsValue}>{formatUsd(bucket.costUsd)}</span>
+              </div>
+            ))}
+            {Object.entries(usage.byModel).map(([modelId, bucket]) => (
+              <div key={modelId} className={styles.totalsRow}>
+                <span>
+                  {getAiModel(modelId)?.label ?? modelId} · {bucket.generations} generation
+                  {bucket.generations === 1 ? "" : "s"} · {formatTokens(bucket.inputTokens)} in /{" "}
+                  {formatTokens(bucket.outputTokens)} out
+                </span>
+                <span className={styles.totalsValue}>{formatUsd(bucket.costUsd)}</span>
+              </div>
+            ))}
+            <p className={styles.help}>Costs are estimates from token counts at list prices.</p>
+          </div>
+        )}
+      </section>
     </div>
   );
+}
+
+function formatTokens(n: number) {
+  return n >= 1000 ? `${(n / 1000).toFixed(1)}K` : String(n);
+}
+
+function formatUsd(n: number) {
+  return `$${n.toFixed(n < 1 ? 3 : 2)}`;
 }
