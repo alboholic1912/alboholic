@@ -1,11 +1,13 @@
-import Link from "next/link";
-import ImagePlaceholder from "@/components/ImagePlaceholder/ImagePlaceholder";
+import PersonCard from "@/components/PersonCard/PersonCard";
 import SectionHeading from "@/components/SectionHeading/SectionHeading";
 import { getPeople } from "@/lib/content/public";
 import styles from "./PeopleSection.module.css";
 
+const SHOWN = 4;
+
 export default async function PeopleSection() {
-  const people = await getPeople();
+  const people = (await getPeople()).slice(0, SHOWN);
+  if (people.length === 0) return null;
 
   return (
     <section className={styles.section}>
@@ -13,14 +15,7 @@ export default async function PeopleSection() {
         <SectionHeading title="Meet the People" href="/people" />
         <div className={styles.row}>
           {people.map((person) => (
-            <Link key={person.slug} href={`/people/${person.slug}`} className={styles.card}>
-              <div className={styles.media}>
-                <ImagePlaceholder tone={person.imageTone} aiImage src={person.image} alt={person.name} sizes="104px" />
-              </div>
-              <span className={styles.name}>{person.name}</span>
-              <span className={styles.role}>{person.role}</span>
-              <span className={styles.era}>{person.era}</span>
-            </Link>
+            <PersonCard key={person.slug} person={person} />
           ))}
         </div>
       </div>

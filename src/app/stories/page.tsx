@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
-import PageIntro from "@/components/PageIntro/PageIntro";
-import StoryCard from "@/components/StoryCard/StoryCard";
+import PageBanner from "@/components/PageBanner/PageBanner";
+import StoriesBrowser from "@/components/StoriesBrowser/StoriesBrowser";
 import { getAllStories } from "@/lib/content/public";
-import styles from "./stories.module.css";
 
 export const revalidate = 60;
 
@@ -15,17 +14,21 @@ export default async function StoriesPage() {
   const stories = await getAllStories();
 
   return (
-    <div className="container">
-      <PageIntro
-        eyebrow="Explore"
-        title="Stories"
+    <>
+      <PageBanner
+        eyebrow="Stories"
+        title="Stories of Albania"
         description="Long-form stories on the people, places and events that shaped Albanian history."
       />
-      <div className={styles.grid}>
-        {stories.map((story) => (
-          <StoryCard key={story.slug} story={story} />
-        ))}
+
+      <div className="container">
+        <StoriesBrowser
+          stories={stories.map(({ body, ...story }) => ({
+            story,
+            text: [story.title, story.category, story.excerpt, ...(body ?? [])].join(" "),
+          }))}
+        />
       </div>
-    </div>
+    </>
   );
 }

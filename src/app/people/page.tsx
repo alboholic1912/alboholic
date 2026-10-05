@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
+import PageBanner from "@/components/PageBanner/PageBanner";
 import PeopleBrowser from "@/components/PeopleBrowser/PeopleBrowser";
 import { getPeople } from "@/lib/content/public";
-import styles from "./people.module.css";
 
 export const revalidate = 60;
 
@@ -15,15 +15,11 @@ export default async function PeoplePage() {
 
   return (
     <>
-      <header className={styles.banner}>
-        <div className={`container ${styles.bannerInner}`}>
-          <span className={styles.eyebrow}>People</span>
-          <h1 className={styles.title}>The People of Albania</h1>
-          <p className={styles.description}>
-            The figures whose lives are woven into Albania&apos;s history, from medieval resistance to the modern era.
-          </p>
-        </div>
-      </header>
+      <PageBanner
+        eyebrow="People"
+        title="The People of Albania"
+        description="The figures whose lives are woven into Albania's history, from medieval resistance to the modern era."
+      />
 
       <div className="container">
         <PeopleBrowser people={people} />

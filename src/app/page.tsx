@@ -1,3 +1,4 @@
+import BattlesSection from "@/components/BattlesSection/BattlesSection";
 import Hero from "@/components/Hero/Hero";
 import LatestStories from "@/components/LatestStories/LatestStories";
 import PeopleSection from "@/components/PeopleSection/PeopleSection";
@@ -13,6 +14,7 @@ export default async function Home() {
       <Hero stories={featuredStories} />
       <LatestStories />
       <PeopleSection />
+      <BattlesSection />
     </>
   );
 }

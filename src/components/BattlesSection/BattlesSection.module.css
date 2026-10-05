@@ -1,0 +1,155 @@
+.section {
+  padding-block: var(--space-6);
+  border-top: 1px solid var(--color-border-soft);
+}
+
+/* A swipeable row on phones, so four full cards never stack into a long column. */
+.row {
+  display: flex;
+  gap: var(--space-4);
+  overflow-x: auto;
+  padding-bottom: var(--space-2);
+  margin: 0 calc(var(--space-4) * -1);
+  padding-inline: var(--space-4);
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: var(--space-4);
+}
+
+.row::-webkit-scrollbar {
+  display: none;
+}
+
+/* The card mirrors PersonCard, so the two home sections read as one set. */
+.card {
+  display: flex;
+  flex: 0 0 78%;
+  flex-direction: column;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-elev);
+  overflow: hidden;
+  scroll-snap-align: start;
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+
+.card:hover {
+  border-color: var(--color-accent-dark);
+  transform: translateY(-2px);
+}
+
+/* The flag-red glow stands in for battles that have no photograph yet. */
+.media {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  background:
+    radial-gradient(90% 120% at 80% 20%, rgba(184, 24, 28, 0.42) 0%, rgba(122, 16, 19, 0.16) 45%, transparent 75%),
+    var(--color-bg-elev-2);
+}
+
+.media img {
+  object-fit: cover;
+}
+
+/* Fades the photo into the card, so the tag and name read as one block with it. */
+.media::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(180deg, transparent 55%, var(--color-bg-elev) 100%);
+}
+
+.tag {
+  position: absolute;
+  left: var(--space-4);
+  bottom: var(--space-1);
+  z-index: 2;
+  max-width: calc(100% - var(--space-6));
+  padding: 3px var(--space-2);
+  border-radius: 4px;
+  border: 1px solid var(--color-accent-dark);
+  background: rgba(60, 10, 12, 0.85);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-4) var(--space-4);
+}
+
+.name {
+  font-family: var(--font-serif);
+  font-size: 20px;
+  line-height: 1.25;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.meta {
+  font-size: 14px;
+  color: var(--color-text-dim);
+}
+
+.blurb {
+  display: -webkit-box;
+  margin-top: var(--space-1);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--color-text-muted);
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+}
+
+.cta {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: auto;
+  padding-top: var(--space-3);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-accent-bright);
+}
+
+.cta svg {
+  transition: transform 0.15s ease;
+}
+
+.card:hover .cta svg {
+  transform: translateX(3px);
+}
+
+@media (min-width: 640px) {
+  .row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    overflow: visible;
+    margin: 0;
+    padding: 0;
+  }
+}
+
+@media (min-width: 960px) {
+  .section {
+    padding-block: var(--space-8);
+  }
+}
+
+@media (min-width: 1200px) {
+  .row {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
