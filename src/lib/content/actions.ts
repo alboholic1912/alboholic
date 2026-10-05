@@ -8,6 +8,7 @@ import { buildSourceBlocks, generateStructuredContent, type SourceInput } from "
 import { DEFAULT_AI_MODEL, getAiModel } from "@/lib/ai/models";
 import { logUsage } from "@/lib/ai/usage";
 import { CONTENT_CONFIG } from "./config";
+import { cleanRecords, parseRecordLines } from "./records";
 import { isContentType, type ContentType } from "./types";
 import { slugify } from "./slug";
 
@@ -26,6 +27,48 @@ function requireTypeAndId(formData: FormData): { type: ContentType; id: string }
     throw new Error("Invalid request.");
   }
   return { type, id };
+}
+
+/** Claude returns camelCase keys; the tables use snake_case columns. */
+function toColumn(key: string): string {
+  return key.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
+}
+
+/**
+ * Lists the stories and people already on the site, so a generated profile can link to
+ * them. This is the one part of the prompt that isn't a source, and it says so.
+ */
+async function personLinkingContext(): Promise<{ instruction: string; storySlugs: Set<string> }> {
+  const supabase = await createClient();
+  const [{ data: stories }, { data: people }] = await Promise.all([
+    supabase.from("stories").select("slug, title, excerpt").order("date", { ascending: false }),
+    supabase.from("people").select("name").order("name", { ascending: true }),
+  ]);
+
+  const lines = ["", "", "Site index, for linking only. It is not a source, so take no facts from it."];
+
+  if (stories?.length) {
+    lines.push(
+      "Stories on Alboholic, as slug: title - excerpt:",
+      ...stories.map((story) => `- ${story.slug}: ${story.title} - ${story.excerpt}`),
+      "- relatedStories: the slugs of up to 4 stories from this index that are clearly about this person, " +
+        "or about events the sources say they took part in. Return an empty list if none fit."
+    );
+  } else {
+    lines.push("- relatedStories: return an empty list; there are no stories to link to yet.");
+  }
+
+  if (people?.length) {
+    lines.push(
+      `People already on Alboholic: ${people.map((person) => person.name).join("; ")}.`,
+      "When one of your relatedPeople is in that list, spell the name exactly as it appears there."
+    );
+  }
+
+  return {
+    instruction: lines.join("\n"),
+    storySlugs: new Set((stories ?? []).map((story) => String(story.slug))),
+  };
 }
 
 async function uniqueSlug(type: ContentType, title: string): Promise<string> {
@@ -67,10 +110,11 @@ export async function generateContent(formData: FormData) {
     }
 
     const { blocks, record } = await buildSourceBlocks(sources);
+    const links = type === "people" ? await personLinkingContext() : null;
 
     const { data: generated, usage } = await generateStructuredContent<Record<string, unknown>>({
       model,
-      typeInstruction: config.aiInstruction,
+      typeInstruction: config.aiInstruction + (links?.instruction ?? ""),
       sourceBlocks: blocks,
       jsonSchema: config.aiSchema,
     });
@@ -79,8 +123,19 @@ export async function generateContent(formData: FormData) {
     const row: Record<string, unknown> = { ...config.defaults, sources: record, status: "review" };
 
     for (const [key, value] of Object.entries(generated)) {
-      const column = key === "imageTone" ? "image_tone" : key;
-      row[column] = value;
+      row[toColumn(key)] = value;
+    }
+
+    // Claude leaves a field empty when the sources can't fill it; drop those list items.
+    for (const field of config.fields) {
+      if (field.kind === "records" && field.columns) {
+        row[field.key] = cleanRecords(row[field.key], field.columns);
+      }
+    }
+
+    if (links) {
+      const picked = Array.isArray(row.related_stories) ? row.related_stories : [];
+      row.related_stories = picked.filter((slug) => links.storySlugs.has(slug));
     }
 
     if (type === "stories" && Array.isArray(row.body)) {
@@ -129,6 +184,8 @@ export async function updateContent(formData: FormData) {
         .split("\n")
         .map((line) => line.trim())
         .filter(Boolean);
+    } else if (field.kind === "records") {
+      update[field.key] = parseRecordLines(String(formData.get(field.key) ?? ""), field.columns ?? []);
     } else {
       update[field.key] = String(formData.get(field.key) ?? "");
     }

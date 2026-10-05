@@ -5,6 +5,7 @@ import { requireUser } from "@/lib/supabase/dal";
 import { getContentById } from "@/lib/content/data";
 import { updateContent, publishContent, unpublishContent, deleteContent } from "@/lib/content/actions";
 import { CONTENT_CONFIG, type FieldDef } from "@/lib/content/config";
+import { formatRecordLines } from "@/lib/content/records";
 import { isContentType, type SourceRecord } from "@/lib/content/types";
 import BackLink from "@/components/BackLink/BackLink";
 import SubmitButton from "@/components/SubmitButton/SubmitButton";
@@ -156,16 +157,21 @@ function renderField(field: FieldDef, record: Record<string, unknown>) {
   }
 
   if (field.kind === "select") {
+    const current = String(value ?? "");
+    const options = field.options ?? [];
     return (
       <div key={field.key} className={styles.field}>
         <label htmlFor={field.key}>{field.label}</label>
-        <select id={field.key} name={field.key} defaultValue={String(value ?? "")}>
-          {field.options?.map((option) => (
+        <select id={field.key} name={field.key} defaultValue={current}>
+          {/* Keep a value the options don't cover (e.g. not set yet) instead of silently replacing it on save. */}
+          {!options.includes(current) && <option value={current}>{current || "Not set"}</option>}
+          {options.map((option) => (
             <option key={option} value={option}>
               {option}
             </option>
           ))}
         </select>
+        {field.helpText && <span className={styles.help}>{field.helpText}</span>}
       </div>
     );
   }
@@ -175,7 +181,22 @@ function renderField(field: FieldDef, record: Record<string, unknown>) {
     return (
       <div key={field.key} className={styles.field}>
         <label htmlFor={field.key}>{field.label}</label>
-        <textarea id={field.key} name={field.key} rows={12} defaultValue={text} />
+        <textarea id={field.key} name={field.key} rows={field.rows ?? 12} defaultValue={text} />
+        {field.helpText && <span className={styles.help}>{field.helpText}</span>}
+      </div>
+    );
+  }
+
+  if (field.kind === "records") {
+    return (
+      <div key={field.key} className={styles.field}>
+        <label htmlFor={field.key}>{field.label}</label>
+        <textarea
+          id={field.key}
+          name={field.key}
+          rows={field.rows ?? 8}
+          defaultValue={formatRecordLines(value, field.columns ?? [])}
+        />
         {field.helpText && <span className={styles.help}>{field.helpText}</span>}
       </div>
     );
@@ -185,7 +206,7 @@ function renderField(field: FieldDef, record: Record<string, unknown>) {
     return (
       <div key={field.key} className={styles.field}>
         <label htmlFor={field.key}>{field.label}</label>
-        <textarea id={field.key} name={field.key} rows={4} defaultValue={String(value ?? "")} />
+        <textarea id={field.key} name={field.key} rows={field.rows ?? 4} defaultValue={String(value ?? "")} />
         {field.helpText && <span className={styles.help}>{field.helpText}</span>}
       </div>
     );

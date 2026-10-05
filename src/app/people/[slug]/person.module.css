@@ -1,70 +1,546 @@
-.header {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  gap: var(--space-3);
-  padding-block: var(--space-5) var(--space-3);
-}
+/* ---------- Hero / identity ---------- */
 
-.media {
+.hero {
   position: relative;
-  width: 140px;
-  height: 140px;
-  border-radius: 50%;
   overflow: hidden;
-  border: 2px solid var(--color-border);
+  background: var(--color-bg-elev);
+  border-bottom: 1px solid var(--color-border-soft);
 }
 
-.info {
+.heroMedia {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+}
+
+/* Portraits are usually taller than this box, so crop from the top to keep the face in frame. */
+.heroMedia img {
+  object-position: 50% 20%;
+}
+
+/*
+ * Fades the portrait into the hero background so the text stays readable. It overhangs
+ * the photo by a pixel, or a hairline of the photo shows at a fractional edge.
+ */
+.heroMedia::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(180deg, transparent 40%, var(--color-bg-elev) 97%);
+}
+
+.heroInner {
+  position: relative;
+  z-index: 2;
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
+  gap: var(--space-4);
+  margin-top: calc(var(--space-8) * -1);
+  padding-bottom: var(--space-6);
+  /* This layer sits over the portrait; let clicks through to the AI-image notice. */
+  pointer-events: none;
+}
+
+.heroInner > * {
+  pointer-events: auto;
+}
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+.breadcrumb a {
+  display: flex;
+  transition: color 0.15s ease;
+}
+
+.breadcrumb a:hover {
+  color: var(--color-text);
+}
+
+.breadcrumb svg {
+  flex-shrink: 0;
+}
+
+.breadcrumb span {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--color-text);
+}
+
+.identity {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3);
 }
 
 .name {
   font-family: var(--font-serif);
-  font-size: clamp(24px, 4vw, 32px);
+  font-size: clamp(34px, 5.4vw, 60px);
+  line-height: 1.05;
   font-weight: 700;
   letter-spacing: -0.01em;
-}
-
-.role {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--color-accent-bright);
+  text-wrap: balance;
 }
 
 .era {
+  font-size: 18px;
+  letter-spacing: 0.02em;
+  color: var(--color-text-muted);
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-1);
+}
+
+.tags li {
+  padding: 6px var(--space-3);
+  border-radius: 6px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-elev-2);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.tags li:first-child {
+  border-color: transparent;
+  background: var(--color-accent-gradient);
+  color: #fff;
+}
+
+.summary {
+  max-width: 46ch;
+  margin-top: var(--space-1);
+  font-size: 17px;
+  line-height: 1.55;
+  color: rgba(246, 243, 241, 0.86);
+}
+
+.birthplace {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 14px;
+  color: var(--color-text-muted);
+}
+
+.birthplace svg {
+  flex-shrink: 0;
+  color: var(--color-accent-bright);
+}
+
+/* ---------- Page body ---------- */
+
+.body {
+  display: flex;
+  flex-direction: column;
+  padding-top: var(--space-5);
+}
+
+.section {
+  padding-block: var(--space-6);
+  border-top: 1px solid var(--color-border-soft);
+}
+
+/* A sparse profile starts straight at a section; the hero's own border is enough there. */
+.body > .section:first-child {
+  padding-top: var(--space-2);
+  border-top: none;
+}
+
+/* ---------- At a glance ---------- */
+
+.facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+
+.fact {
+  position: relative;
+  padding: var(--space-3) var(--space-3) var(--space-3) 42px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-elev);
+  overflow-wrap: anywhere;
+}
+
+.fact dt {
+  margin-bottom: 2px;
   font-size: 12px;
   color: var(--color-text-dim);
 }
 
-.prose {
-  max-width: 60ch;
-  margin-inline: auto;
-  padding-block: var(--space-3) var(--space-8);
-  font-size: 15px;
-  line-height: 1.7;
-  color: var(--color-text-muted);
-  text-align: center;
+.fact dt svg {
+  position: absolute;
+  top: 14px;
+  left: 13px;
+  color: var(--color-accent-bright);
 }
 
-.placeholder {
-  font-style: italic;
+.fact dd {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.35;
+}
+
+.fact dd span {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--color-text-muted);
+}
+
+/* ---------- Why they matter / Key moments ---------- */
+
+.columns {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-7);
+  padding-block: var(--space-6);
+}
+
+.column {
+  flex: 1;
+  min-width: 0;
+}
+
+.points,
+.timeline {
+  display: flex;
+  flex-direction: column;
+  max-width: 640px;
+}
+
+.points {
+  gap: var(--space-5);
+}
+
+.point {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  gap: var(--space-4);
+}
+
+.pointNumber {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 44px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-accent-dark);
+  background: rgba(184, 24, 28, 0.08);
+  font-size: 16px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-accent-bright);
+}
+
+.itemTitle {
+  font-family: var(--font-serif);
+  font-size: 17px;
+  line-height: 1.3;
+  font-weight: 700;
+}
+
+.itemText {
+  margin-top: var(--space-1);
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--color-text-muted);
+}
+
+/* The rail and its dots are drawn by the items, so the line ends with the last moment. */
+.moment {
+  --rail: 5px;
+
+  position: relative;
+  display: grid;
+  gap: 2px;
+  padding: 0 0 var(--space-5) 28px;
+}
+
+.moment:last-child {
+  padding-bottom: 0;
+}
+
+.moment::before {
+  content: "";
+  position: absolute;
+  top: 4px;
+  left: calc(var(--rail) - 5px);
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--color-accent-bright);
+  box-shadow: 0 0 0 4px rgba(239, 64, 69, 0.16);
+}
+
+.moment::after {
+  content: "";
+  position: absolute;
+  top: 22px;
+  bottom: -2px;
+  left: var(--rail);
+  width: 1px;
+  background: var(--color-accent-dark);
+}
+
+.moment:last-child::after {
+  display: none;
+}
+
+.momentDate {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--color-accent-bright);
+}
+
+/* ---------- Stories featuring this person ---------- */
+
+/* A swipeable row on phones, so four cards don't push the rest of the profile far down. */
+.stories {
+  display: flex;
+  gap: var(--space-4);
+  margin-inline: calc(var(--space-4) * -1);
+  padding-inline: var(--space-4);
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: var(--space-4);
+}
+
+.stories::-webkit-scrollbar {
+  display: none;
+}
+
+.stories > * {
+  flex: 0 0 78%;
+  scroll-snap-align: start;
+}
+
+.stories > :only-child {
+  flex-basis: 100%;
+}
+
+.empty {
+  max-width: 60ch;
+  font-size: 14px;
+  line-height: 1.6;
   color: var(--color-text-dim);
 }
 
+/* ---------- Associated people & places, sources ---------- */
+
+.archive {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--space-6);
+}
+
+.entities,
+.sources {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.entity {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.entityThumb,
+.entityIcon {
+  position: relative;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  overflow: hidden;
+}
+
+.entityIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-bg-elev);
+  color: var(--color-text-dim);
+}
+
+.entityName {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.35;
+  transition: color 0.15s ease;
+}
+
+.entityMeta {
+  display: block;
+  margin-top: 1px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--color-text-dim);
+}
+
+a.entity:hover .entityName,
+a.entityName:hover {
+  color: var(--color-accent-bright);
+}
+
+.source {
+  display: flex;
+  gap: var(--space-3);
+  overflow-wrap: anywhere;
+}
+
+.source svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--color-text-dim);
+}
+
+.source .entityName {
+  font-weight: 500;
+}
+
 @media (min-width: 640px) {
-  .header {
-    flex-direction: row;
-    text-align: left;
-    align-items: center;
-    padding-block: var(--space-7) var(--space-4);
+  .heroMedia {
+    aspect-ratio: 16 / 9;
   }
 
-  .prose {
-    text-align: left;
+  .facts {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  /* Dates move into their own column, left of the rail. */
+  .moment {
+    --date: 104px;
+    --rail: calc(var(--date) + 20px);
+
+    grid-template-columns: var(--date) minmax(0, 1fr);
+    gap: 44px;
+    padding-left: 0;
+  }
+
+  .stories {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     margin-inline: 0;
+    padding-inline: 0;
+    overflow: visible;
+  }
+}
+
+@media (min-width: 960px) {
+  .hero {
+    display: flex;
+    min-height: 480px;
+  }
+
+  /* A height-driven box pinned right, so a portrait is never stretched across the hero. */
+  .heroMedia {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: auto;
+    max-width: 62%;
+    aspect-ratio: 4 / 3;
+  }
+
+  /* Eased stops, so the portrait's left edge dissolves instead of showing as a line. */
+  .heroMedia::after {
+    background: linear-gradient(
+      90deg,
+      var(--color-bg-elev) 0%,
+      rgba(13, 10, 10, 0.94) 8%,
+      rgba(13, 10, 10, 0.72) 22%,
+      rgba(13, 10, 10, 0.34) 42%,
+      transparent 66%
+    );
+  }
+
+  .heroInner {
+    gap: var(--space-5);
+    margin-top: 0;
+    padding-block: var(--space-5) var(--space-7);
+  }
+
+  .identity {
+    max-width: 50%;
+    margin-block: auto;
+  }
+
+  .body {
+    padding-top: var(--space-6);
+  }
+
+  .section {
+    padding-block: var(--space-7);
+  }
+
+  /* One strip with dividers instead of separate tiles. */
+  .facts {
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
+    gap: 0;
+    padding-block: var(--space-4);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border);
+    background: var(--color-bg-elev);
+  }
+
+  .fact {
+    padding: var(--space-1) var(--space-4) var(--space-1) 52px;
+    border: none;
+    border-radius: 0;
+    background: none;
+  }
+
+  .fact + .fact {
+    border-left: 1px solid var(--color-border);
+  }
+
+  .fact dt svg {
+    top: 6px;
+    left: 20px;
+  }
+
+  .columns {
+    flex-direction: row;
+    padding-block: var(--space-7);
+  }
+
+  .column + .column {
+    padding-left: var(--space-7);
+    border-left: 1px solid var(--color-border-soft);
+  }
+
+  .stories {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--space-5);
+  }
+
+  .archive {
+    gap: var(--space-7);
   }
 }

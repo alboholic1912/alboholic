@@ -13,6 +13,11 @@ const NAV_LINKS = [
   { href: "/about", label: "About" },
 ];
 
+// A section stays highlighted on its detail pages, e.g. People on /people/[slug].
+function isActive(pathname: string | null, href: string) {
+  return pathname === href || (href !== "/" && Boolean(pathname?.startsWith(`${href}/`)));
+}
+
 export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
   const pathname = usePathname();
@@ -34,7 +39,7 @@ export default function Header() {
         <nav className={styles.nav} aria-label="Primary">
           <ul>
             {NAV_LINKS.map((link) => {
-              const active = pathname === link.href;
+              const active = isActive(pathname, link.href);
               return (
                 <li key={link.href}>
                   <Link
@@ -77,7 +82,7 @@ export default function Header() {
                 <Link
                   href={link.href}
                   onClick={() => setMenuOpen(false)}
-                  aria-current={pathname === link.href ? "page" : undefined}
+                  aria-current={isActive(pathname, link.href) ? "page" : undefined}
                 >
                   {link.label}
                 </Link>

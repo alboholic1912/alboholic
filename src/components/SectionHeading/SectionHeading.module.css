@@ -13,6 +13,14 @@
   letter-spacing: -0.01em;
 }
 
+.compact {
+  margin-bottom: var(--space-4);
+}
+
+.compact .title {
+  font-size: 19px;
+}
+
 .link {
   display: inline-flex;
   align-items: center;

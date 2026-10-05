@@ -39,6 +39,22 @@ create table if not exists people (
   updated_at timestamptz not null default now()
 );
 
+-- Person profile columns: everything the public profile page shows beyond the basics.
+-- `bio` is the short introduction under the name; `citations` are the public references
+-- (the `sources` column below records what the Studio generated the entry from).
+alter table people
+  add column if not exists category text not null default '',
+  add column if not exists pronoun text not null default 'they' check (pronoun in ('he', 'she', 'they')),
+  add column if not exists birthplace text not null default '',
+  add column if not exists known_for text not null default '',
+  add column if not exists facts jsonb not null default '[]',
+  add column if not exists significance jsonb not null default '[]',
+  add column if not exists timeline jsonb not null default '[]',
+  add column if not exists related_stories text[] not null default '{}',
+  add column if not exists related_people jsonb not null default '[]',
+  add column if not exists related_places jsonb not null default '[]',
+  add column if not exists citations jsonb not null default '[]';
+
 -- Editorial workflow columns, added to every content table.
 do $$
 begin
