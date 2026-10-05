@@ -12,8 +12,8 @@ export default function AboutPage() {
       eyebrow="About"
       title="About Alboholic"
       paragraphs={[
-        "Alboholic is a modern, readable home for Albanian history — stories, people, places and periods brought together in one place.",
-        "The site is currently in early development. Content across Stories, People, Places and Periods is placeholder copy while the core reading experience is being built.",
+        "Alboholic is a modern, readable home for Albanian history — stories and people brought together in one place.",
+        "The site is currently in early development. Content across Stories and People is placeholder copy while the core reading experience is being built.",
         "More about our mission, editorial approach and the people behind Alboholic is coming soon.",
       ]}
     />

@@ -1,6 +1,6 @@
-export type ContentType = "stories" | "people" | "periods" | "places";
+export type ContentType = "stories" | "people";
 
-export const CONTENT_TYPES: ContentType[] = ["stories", "people", "periods", "places"];
+export const CONTENT_TYPES: ContentType[] = ["stories", "people"];
 
 export function isContentType(value: string): value is ContentType {
   return (CONTENT_TYPES as string[]).includes(value);
@@ -47,28 +47,9 @@ export interface PersonRow extends BaseRow {
   image_tone: ImageTone;
 }
 
-export interface PeriodRow extends BaseRow {
-  name: string;
-  range: string;
-  description: string;
-  sort_order: number;
-}
-
-export interface PlaceRow extends BaseRow {
-  name: string;
-  region: string;
-  description: string;
-  image: string | null;
-  image_tone: ImageTone;
-}
-
 export type ContentRow<T extends ContentType> = T extends "stories"
   ? StoryRow
-  : T extends "people"
-    ? PersonRow
-    : T extends "periods"
-      ? PeriodRow
-      : PlaceRow;
+  : PersonRow;
 
 export interface IdeaRow {
   id: string;

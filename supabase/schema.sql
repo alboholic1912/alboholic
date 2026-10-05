@@ -39,29 +39,6 @@ create table if not exists people (
   updated_at timestamptz not null default now()
 );
 
-create table if not exists periods (
-  id uuid primary key default gen_random_uuid(),
-  slug text unique not null,
-  name text not null default '',
-  range text not null default '',
-  description text not null default '',
-  sort_order integer not null default 0,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
-);
-
-create table if not exists places (
-  id uuid primary key default gen_random_uuid(),
-  slug text unique not null,
-  name text not null default '',
-  region text not null default '',
-  description text not null default '',
-  image text,
-  image_tone text not null default 'stone' check (image_tone in ('crimson', 'amber', 'stone', 'slate')),
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
-);
-
 -- Editorial workflow columns, added to every content table.
 do $$
 begin
@@ -78,7 +55,7 @@ begin
       ),
       ''
     )
-    from unnest(array['stories', 'people', 'periods', 'places']) as tbl
+    from unnest(array['stories', 'people']) as tbl
   );
 end $$;
 
@@ -104,8 +81,6 @@ create table if not exists ideas (
 
 alter table stories enable row level security;
 alter table people enable row level security;
-alter table periods enable row level security;
-alter table places enable row level security;
 alter table ideas enable row level security;
 
 do $$
@@ -130,7 +105,7 @@ begin
       ),
       ''
     )
-    from unnest(array['stories', 'people', 'periods', 'places']) as tbl
+    from unnest(array['stories', 'people']) as tbl
   );
 end $$;
 

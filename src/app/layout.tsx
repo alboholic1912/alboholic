@@ -18,7 +18,7 @@ const playfairDisplay = Playfair_Display({
 export const metadata: Metadata = {
   title: "Alboholic — Stories that last",
   description:
-    "A modern, readable home for Albanian history — stories, heroes, places and events.",
+    "A modern, readable home for Albanian history — stories, heroes and events.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

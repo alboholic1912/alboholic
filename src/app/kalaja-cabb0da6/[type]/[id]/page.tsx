@@ -10,7 +10,7 @@ import BackLink from "@/components/BackLink/BackLink";
 import SubmitButton from "@/components/SubmitButton/SubmitButton";
 import styles from "../../studio.module.css";
 
-const TYPES_WITH_IMAGE = new Set(["stories", "people", "places"]);
+const TYPES_WITH_IMAGE = new Set(["stories", "people"]);
 
 export async function generateMetadata({
   params,

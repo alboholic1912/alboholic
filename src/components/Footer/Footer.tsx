@@ -27,8 +27,6 @@ export default function Footer() {
             <span className={styles.groupTitle}>Explore</span>
             <Link href="/stories">Stories</Link>
             <Link href="/people">People</Link>
-            <Link href="/places">Places</Link>
-            <Link href="/periods">Periods</Link>
           </div>
           <div className={styles.group}>
             <span className={styles.groupTitle}>About</span>

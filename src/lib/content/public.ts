@@ -1,5 +1,5 @@
 import { createPublicClient } from "@/lib/supabase/public";
-import type { StoryRow, PersonRow, PeriodRow, PlaceRow } from "./types";
+import type { StoryRow, PersonRow } from "./types";
 
 export type Story = {
   slug: string;
@@ -22,22 +22,6 @@ export type Person = {
   era: string;
   imageTone: "crimson" | "amber" | "stone" | "slate";
   bio?: string;
-  image?: string;
-};
-
-export type Period = {
-  slug: string;
-  name: string;
-  range: string;
-  description: string;
-};
-
-export type Place = {
-  slug: string;
-  name: string;
-  region: string;
-  description: string;
-  imageTone: "crimson" | "amber" | "stone" | "slate";
   image?: string;
 };
 
@@ -65,26 +49,6 @@ function toPerson(row: PersonRow): Person {
     era: row.era,
     imageTone: row.image_tone,
     bio: row.bio ?? undefined,
-    image: row.image ?? undefined,
-  };
-}
-
-function toPeriod(row: PeriodRow): Period {
-  return {
-    slug: row.slug,
-    name: row.name,
-    range: row.range,
-    description: row.description,
-  };
-}
-
-function toPlace(row: PlaceRow): Place {
-  return {
-    slug: row.slug,
-    name: row.name,
-    region: row.region,
-    description: row.description,
-    imageTone: row.image_tone,
     image: row.image ?? undefined,
   };
 }
@@ -154,44 +118,3 @@ export async function getPersonBySlug(slug: string): Promise<Person | undefined>
   return data ? toPerson(data as PersonRow) : undefined;
 }
 
-export async function getPeriods(): Promise<Period[]> {
-  const { data, error } = await createPublicClient()
-    .from("periods")
-    .select("*")
-    .eq("status", "published")
-    .order("sort_order", { ascending: true });
-  if (error) throw new Error(error.message);
-  return ((data ?? []) as PeriodRow[]).map(toPeriod);
-}
-
-export async function getPeriodBySlug(slug: string): Promise<Period | undefined> {
-  const { data, error } = await createPublicClient()
-    .from("periods")
-    .select("*")
-    .eq("status", "published")
-    .eq("slug", slug)
-    .maybeSingle();
-  if (error) throw new Error(error.message);
-  return data ? toPeriod(data as PeriodRow) : undefined;
-}
-
-export async function getPlaces(): Promise<Place[]> {
-  const { data, error } = await createPublicClient()
-    .from("places")
-    .select("*")
-    .eq("status", "published")
-    .order("name", { ascending: true });
-  if (error) throw new Error(error.message);
-  return ((data ?? []) as PlaceRow[]).map(toPlace);
-}
-
-export async function getPlaceBySlug(slug: string): Promise<Place | undefined> {
-  const { data, error } = await createPublicClient()
-    .from("places")
-    .select("*")
-    .eq("status", "published")
-    .eq("slug", slug)
-    .maybeSingle();
-  if (error) throw new Error(error.message);
-  return data ? toPlace(data as PlaceRow) : undefined;
-}

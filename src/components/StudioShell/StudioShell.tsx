@@ -10,8 +10,6 @@ import {
   DashboardIcon,
   BookIcon,
   UsersIcon,
-  ClockIcon,
-  PinIcon,
   BulbIcon,
   LogoutIcon,
   ExternalIcon,
@@ -24,8 +22,6 @@ const NAV_ITEMS: { href: string; label: string; icon: () => JSX.Element; exact?:
   { href: "/kalaja-cabb0da6", label: "Dashboard", icon: DashboardIcon, exact: true },
   { href: "/kalaja-cabb0da6/stories", label: "Stories", icon: BookIcon },
   { href: "/kalaja-cabb0da6/people", label: "People", icon: UsersIcon },
-  { href: "/kalaja-cabb0da6/periods", label: "Periods", icon: ClockIcon },
-  { href: "/kalaja-cabb0da6/places", label: "Places", icon: PinIcon },
   { href: "/kalaja-cabb0da6/ideas", label: "Ideas", icon: BulbIcon },
 ];
 
