@@ -1,76 +1,84 @@
 .footer {
   margin-top: var(--space-8);
-  padding-top: var(--space-7);
   border-top: 1px solid var(--color-border-soft);
-  background: var(--color-bg-elev);
+  background: var(--color-bg);
+}
+
+.flush {
+  margin-top: 0;
 }
 
 .inner {
   display: flex;
   flex-direction: column;
-  gap: var(--space-6);
-  padding-bottom: var(--space-6);
+  gap: var(--space-5);
+  padding-block: var(--space-6);
 }
 
 .brandBlock {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
-  max-width: 40ch;
+  gap: var(--space-1);
 }
 
 .brand {
   font-family: var(--font-serif);
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 700;
+  letter-spacing: -0.01em;
 }
 
 .tagline {
   font-size: 13px;
-  line-height: 1.6;
-  color: var(--color-text-muted);
-}
-
-.linkGroups {
-  display: flex;
-  gap: var(--space-7);
-  flex-wrap: wrap;
-}
-
-.group {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-
-.groupTitle {
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
   color: var(--color-text-dim);
-  margin-bottom: var(--space-1);
 }
 
-.group a {
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-5);
+}
+
+.links a {
+  display: block;
+  padding-block: var(--space-1);
   font-size: 13px;
+  font-weight: 500;
   color: var(--color-text-muted);
+  transition: color 0.15s ease;
 }
 
-.group a:hover {
+.links a:hover {
   color: var(--color-text);
 }
 
-.copyright {
+.legal {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
   padding-block: var(--space-4);
   border-top: 1px solid var(--color-border-soft);
   font-size: 12px;
+  line-height: 1.5;
   color: var(--color-text-dim);
 }
 
 @media (min-width: 768px) {
   .inner {
     flex-direction: row;
+    align-items: center;
     justify-content: space-between;
+    gap: var(--space-7);
+  }
+
+  .links {
+    justify-content: flex-end;
+    gap: var(--space-2) var(--space-6);
+  }
+
+  .legal {
+    flex-direction: row;
+    justify-content: space-between;
+    gap: var(--space-5);
   }
 }

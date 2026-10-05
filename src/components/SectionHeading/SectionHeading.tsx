@@ -6,15 +6,18 @@ export default function SectionHeading({
   href,
   linkLabel = "View all",
   compact = false,
+  marked = false,
 }: {
   title: string;
   href?: string;
   linkLabel?: string;
   /** A smaller heading, for secondary sections that sit side by side. */
   compact?: boolean;
+  /** A red dash before the title, for the main sections of the home page. */
+  marked?: boolean;
 }) {
   return (
-    <div className={[styles.root, compact && styles.compact].filter(Boolean).join(" ")}>
+    <div className={[styles.root, compact && styles.compact, marked && styles.marked].filter(Boolean).join(" ")}>
       <h2 className={styles.title}>{title}</h2>
       {href && (
         <Link href={href} className={styles.link}>

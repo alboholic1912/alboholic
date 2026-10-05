@@ -21,6 +21,7 @@
 
 .body {
   display: flex;
+  flex: 1;
   flex-direction: column;
   gap: var(--space-2);
   padding: var(--space-4);
@@ -42,11 +43,13 @@
   letter-spacing: -0.01em;
 }
 
+/* Pinned to the foot of the card, so a row of cards lines up whatever the titles run to. */
 .meta {
   display: flex;
   align-items: center;
   gap: var(--space-4);
-  margin-top: var(--space-1);
+  margin-top: auto;
+  padding-top: var(--space-1);
   font-size: 12px;
   color: var(--color-text-dim);
 }
@@ -61,10 +64,41 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
   width: 26px;
   height: 26px;
   margin-left: auto;
   border-radius: 50%;
   border: 1px solid var(--color-border);
   color: var(--color-text-muted);
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.card:hover .arrow {
+  border-color: var(--color-accent);
+  background: var(--color-accent);
+  color: #fff;
+}
+
+/* ---------- Compact: a row of four ---------- */
+
+.compact .media {
+  aspect-ratio: 16 / 10;
+}
+
+.compact .title {
+  display: -webkit-box;
+  font-size: 17px;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.compact .meta {
+  gap: var(--space-3);
+}
+
+.compact .metaItem {
+  white-space: nowrap;
 }

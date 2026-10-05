@@ -21,6 +21,21 @@
   font-size: 19px;
 }
 
+.marked .title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.marked .title::before {
+  content: "";
+  flex-shrink: 0;
+  width: 24px;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--color-accent-bright);
+}
+
 .link {
   display: inline-flex;
   align-items: center;
@@ -29,4 +44,12 @@
   font-size: 13px;
   font-weight: 600;
   color: var(--color-accent-bright);
+}
+
+.link svg {
+  transition: transform 0.15s ease;
+}
+
+.link:hover svg {
+  transform: translateX(3px);
 }

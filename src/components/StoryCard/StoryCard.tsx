@@ -1,11 +1,19 @@
 import Link from "next/link";
 import ImagePlaceholder from "@/components/ImagePlaceholder/ImagePlaceholder";
 import type { Story } from "@/lib/content/public";
+import { formatDate } from "@/lib/content/text";
 import styles from "./StoryCard.module.css";
 
-export default function StoryCard({ story }: { story: Story }) {
+export default function StoryCard({
+  story,
+  compact = false,
+}: {
+  story: Story;
+  /** A tighter card for a row of four: the title is cut at two lines. */
+  compact?: boolean;
+}) {
   return (
-    <Link href={`/stories/${story.slug}`} className={styles.card}>
+    <Link href={`/stories/${story.slug}`} className={[styles.card, compact && styles.compact].filter(Boolean).join(" ")}>
       <div className={styles.media}>
         <ImagePlaceholder tone={story.imageTone} aiImage={story.aiImage} src={story.image} alt={story.title} />
       </div>
@@ -15,7 +23,7 @@ export default function StoryCard({ story }: { story: Story }) {
         <div className={styles.meta}>
           <span className={styles.metaItem}>
             <CalendarIcon />
-            {story.date}
+            {formatDate(story.date)}
           </span>
           <span className={styles.metaItem}>
             <ClockIcon />

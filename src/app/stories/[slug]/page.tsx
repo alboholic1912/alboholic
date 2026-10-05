@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import ImagePlaceholder from "@/components/ImagePlaceholder/ImagePlaceholder";
 import { getAllStories, getStoryBySlug } from "@/lib/content/public";
+import { formatDate } from "@/lib/content/text";
 import styles from "./story.module.css";
 
 export const revalidate = 60;
@@ -67,7 +68,7 @@ export default async function StoryPage({ params }: PageProps<"/stories/[slug]">
           <div className={styles.heroText}>
             <div className={styles.kicker}>
               <span className={styles.category}>{story.category}</span>
-              <span>{story.date}</span>
+              <span>{formatDate(story.date)}</span>
             </div>
             <h1 className={styles.title}>{story.title}</h1>
             <p className={styles.excerpt}>{story.excerpt}</p>
@@ -100,7 +101,7 @@ export default async function StoryPage({ params }: PageProps<"/stories/[slug]">
               </div>
               <div>
                 <dt>Published</dt>
-                <dd>{story.date}</dd>
+                <dd>{formatDate(story.date)}</dd>
               </div>
               <div>
                 <dt>Reading time</dt>

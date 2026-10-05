@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import EagleMark from "@/components/EagleMark/EagleMark";
 import styles from "./Header.module.css";
 
 const NAV_LINKS = [
@@ -33,8 +34,8 @@ export default function Header() {
     <header className={[styles.header, pathname === IMMERSIVE_PATH && styles.immersive].filter(Boolean).join(" ")}>
       <div className={`container ${styles.bar}`}>
         <Link href="/" className={styles.brand}>
-          <span className={styles.shield} aria-hidden="true">
-            🛡
+          <span className={styles.shield}>
+            <EagleMark size={24} />
           </span>
           <span className={styles.brandText}>Alboholic</span>
         </Link>

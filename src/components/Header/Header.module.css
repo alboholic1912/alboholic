@@ -31,11 +31,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: var(--radius-sm);
+  width: 34px;
+  height: 34px;
+  border-radius: 6px;
   background: var(--color-accent-gradient);
-  font-size: 15px;
+  /* The eagle is black on red, as on the flag. */
+  color: #0a0606;
 }
 
 .brandText {

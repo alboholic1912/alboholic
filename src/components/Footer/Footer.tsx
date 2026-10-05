@@ -4,6 +4,16 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import styles from "./Footer.module.css";
 
+const LINKS = [
+  { href: "/", label: "Home" },
+  { href: "/stories", label: "Stories" },
+  { href: "/people", label: "People" },
+  { href: "/battles", label: "Battles" },
+  { href: "/about", label: "About" },
+  { href: "/sources", label: "Sources" },
+  { href: "/contact", label: "Contact" },
+];
+
 export default function Footer() {
   const pathname = usePathname();
 
@@ -13,37 +23,30 @@ export default function Footer() {
   }
 
   return (
-    <footer className={styles.footer}>
+    // The home page ends in a full-width strip that the footer follows directly.
+    <footer className={[styles.footer, pathname === "/" && styles.flush].filter(Boolean).join(" ")}>
       <div className={`container ${styles.inner}`}>
         <div className={styles.brandBlock}>
-          <span className={styles.brand}>Alboholic</span>
-          <p className={styles.tagline}>
-            Real stories, trusted sources — a deeper understanding of Albania
-            and its people.
-          </p>
+          <Link href="/" className={styles.brand}>
+            Alboholic
+          </Link>
+          <p className={styles.tagline}>Real stories. Enduring history.</p>
         </div>
 
-        <div className={styles.linkGroups}>
-          <div className={styles.group}>
-            <span className={styles.groupTitle}>Explore</span>
-            <Link href="/stories">Stories</Link>
-            <Link href="/people">People</Link>
-            <Link href="/battles">Battles</Link>
-          </div>
-          <div className={styles.group}>
-            <span className={styles.groupTitle}>About</span>
-            <Link href="/about">About Alboholic</Link>
-            <Link href="/sources">Sources & Methodology</Link>
-            <Link href="/contact">Contact</Link>
-          </div>
-        </div>
+        <nav aria-label="Footer">
+          <ul className={styles.links}>
+            {LINKS.map((link) => (
+              <li key={link.href}>
+                <Link href={link.href}>{link.label}</Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
       </div>
 
-      <div className="container">
-        <p className={styles.copyright}>
-          © {new Date().getFullYear()} Alboholic. Images marked AI-generated are
-          for illustrative purposes only.
-        </p>
+      <div className={`container ${styles.legal}`}>
+        <p>© {new Date().getFullYear()} Alboholic. Images marked AI-generated are for illustrative purposes only.</p>
+        <p>Honoring one of Europe’s oldest cultures.</p>
       </div>
     </footer>
   );

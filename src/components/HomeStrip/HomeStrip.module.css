@@ -1,0 +1,76 @@
+.strip {
+  border-block: 1px solid var(--color-border-soft);
+  background: linear-gradient(180deg, var(--color-bg) 0%, var(--color-bg-elev) 100%);
+}
+
+/* Two by two on a phone, where four across would leave no room for the words. */
+.list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2) var(--space-3);
+  padding-block: var(--space-4);
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  height: 100%;
+  padding: var(--space-2);
+  border-radius: var(--radius-sm);
+  transition: background 0.15s ease;
+}
+
+.item:hover {
+  background: rgba(246, 243, 241, 0.04);
+}
+
+.icon {
+  position: relative;
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  color: var(--color-accent-bright);
+}
+
+.text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.title {
+  font-family: var(--font-serif);
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.sub {
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--color-text-muted);
+}
+
+@media (min-width: 860px) {
+  .list {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0;
+    padding-block: var(--space-3);
+  }
+
+  .list li + li {
+    border-left: 1px solid var(--color-border-soft);
+  }
+
+  .item {
+    justify-content: center;
+    gap: var(--space-4);
+    padding: var(--space-3) var(--space-4);
+    border-radius: 0;
+  }
+
+  .title {
+    font-size: 16px;
+  }
+}
