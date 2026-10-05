@@ -9,9 +9,12 @@ const NAV_LINKS = [
   { href: "/", label: "Home" },
   { href: "/stories", label: "Stories" },
   { href: "/people", label: "People" },
-  { href: "/map", label: "Map" },
+  { href: "/battles", label: "Battles" },
   { href: "/about", label: "About" },
 ];
+
+// The Battles map is a full-screen page with its own top bar on phones.
+const IMMERSIVE_PATH = "/battles";
 
 // A section stays highlighted on its detail pages, e.g. People on /people/[slug].
 function isActive(pathname: string | null, href: string) {
@@ -27,7 +30,7 @@ export default function Header() {
   }
 
   return (
-    <header className={styles.header}>
+    <header className={[styles.header, pathname === IMMERSIVE_PATH && styles.immersive].filter(Boolean).join(" ")}>
       <div className={`container ${styles.bar}`}>
         <Link href="/" className={styles.brand}>
           <span className={styles.shield} aria-hidden="true">

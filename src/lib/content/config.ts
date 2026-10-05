@@ -1,11 +1,27 @@
-import { CITATION_TYPES, PERSON_CATEGORIES, PRONOUNS, type ContentType, type ImageTone } from "./types";
+import {
+  BATTLE_PERIODS,
+  CITATION_TYPES,
+  PERSON_CATEGORIES,
+  PRONOUNS,
+  type ContentType,
+  type ImageTone,
+} from "./types";
 
 // JSON Schema objects sent to Claude as the structured-output format.
 type JsonSchema = Record<string, unknown>;
 
 const IMAGE_TONES: ImageTone[] = ["crimson", "amber", "stone", "slate"];
 
-export type FieldKind = "text" | "textarea" | "paragraphs" | "records" | "select" | "checkbox" | "number";
+/** "coordinates" is a map pin: one field that edits the `lat` and `lng` columns together. */
+export type FieldKind =
+  | "text"
+  | "textarea"
+  | "paragraphs"
+  | "records"
+  | "select"
+  | "checkbox"
+  | "number"
+  | "coordinates";
 
 /** One part of a "records" item. Items missing a non-optional part are dropped. */
 export interface RecordColumn {
@@ -83,6 +99,19 @@ export const PERSON_RECORDS = {
     { key: "detail", label: "Detail", optional: true },
     { key: "url", label: "URL", optional: true },
   ],
+} satisfies Record<string, RecordColumn[]>;
+
+/** The structured lists on a battle card. Citations share the people definition. */
+export const BATTLE_RECORDS = {
+  key_people: [
+    { key: "name", label: "Name" },
+    { key: "role", label: "Role", optional: true },
+  ],
+  details: [
+    { key: "label", label: "Label" },
+    { key: "value", label: "Value" },
+  ],
+  citations: PERSON_RECORDS.citations,
 } satisfies Record<string, RecordColumn[]>;
 
 function recordListSchema(columns: RecordColumn[]): JsonSchema {
@@ -290,5 +319,132 @@ export const CONTENT_CONFIG: Record<ContentType, ContentTypeConfig> = {
       additionalProperties: false,
     },
     defaults: { image_tone: "stone" },
+  },
+  battles: {
+    type: "battles",
+    label: "Battle",
+    labelPlural: "Battles",
+    titleField: "name",
+    fields: [
+      { key: "name", label: "Name", kind: "text" },
+      { key: "period", label: "Period", kind: "select", options: [...BATTLE_PERIODS], helpText: "The filter chip this battle appears under on the map." },
+      { key: "date", label: "Date", kind: "text", helpText: "As shown on the card, e.g. 18 March 1908, or just the year." },
+      { key: "year", label: "Year", kind: "number", helpText: "The year it began, as a number. Sorts the list and labels it, e.g. 1908 · Gjirokastër." },
+      { key: "location", label: "Location", kind: "text", helpText: "The place, then its region, e.g. Mashkullorë, Gjirokastër. The place labels the pin and the region labels the list." },
+      {
+        key: "coordinates",
+        label: "Map pin",
+        kind: "coordinates",
+        helpText: "Click the map to place the pin, or drag it. A battle without a pin is not shown on the map.",
+      },
+      { key: "pin_note", label: "Pin note", kind: "text", helpText: "How the pin was placed. For editors only, never shown on the site." },
+      { key: "participants", label: "Participants", kind: "text", helpText: "Who fought, e.g. Albanian fighters vs Ottoman forces." },
+      { key: "summary", label: "Summary", kind: "textarea", helpText: "2–3 sentences on what happened. The story itself belongs in Stories." },
+      { key: "outcome", label: "Outcome", kind: "textarea", rows: 2, helpText: "One sentence." },
+      {
+        key: "key_people",
+        label: "Key people",
+        kind: "records",
+        columns: BATTLE_RECORDS.key_people,
+        rows: 4,
+        helpText: recordsHelp(BATTLE_RECORDS.key_people, "Çerçiz Topulli | Çeta leader") + " Names that match a published profile get its portrait and a link.",
+      },
+      {
+        key: "details",
+        label: "More details",
+        kind: "records",
+        columns: BATTLE_RECORDS.details,
+        rows: 4,
+        helpText: recordsHelp(BATTLE_RECORDS.details, "Part of | Albanian National Awakening") + " Optional, and only shown once a reader expands the card. Leave out anything uncertain.",
+      },
+      { key: "story_slug", label: "Story", kind: "text", helpText: "The slug of the story behind the View Story button (the part after /stories/). Left empty, a published story with this battle's name in its title or excerpt is used." },
+      {
+        key: "citations",
+        label: "Sources / references",
+        kind: "records",
+        columns: BATTLE_RECORDS.citations,
+        rows: 5,
+        helpText:
+          recordsHelp(BATTLE_RECORDS.citations, "book | Kosovo: A Short History | Noel Malcolm, 1998 | https://example.org") +
+          ` Type is one of: ${CITATION_TYPES.join(", ")}.`,
+      },
+      { key: "image_tone", label: "Tone", kind: "select", options: IMAGE_TONES },
+      { key: "ai_image", label: "Featured image is AI-generated", kind: "checkbox" },
+    ],
+    aiInstruction:
+      "Produce an entry for the Battles map. A reader taps a pin and should learn where the battle was fought, " +
+      "who fought and how it ended in about 20 seconds; the full account belongs in Stories. Keep every field " +
+      "short and factual, and ground everything strictly in the sources above. If the sources cover several " +
+      "battles, write up only the one they are mainly about.\n\n" +
+      '- name: the name the battle is known by, e.g. "Battle of Mashkullorë" or "Siege of Krujë".\n' +
+      "- period: the one period that fits best. Medieval: up to 1479, including Skanderbeg's wars. Ottoman: " +
+      "1479–1877, under Ottoman rule. Independence: 1878–1913, from the League of Prizren through the Balkan " +
+      "Wars. WWI: 1914–1920, the First World War and its aftermath. WWII: 1939–1945. Kosovo War: 1998–1999 " +
+      "and the fighting around it. If the battle falls between two periods, pick the closer one.\n" +
+      '- date: the date as a reader should see it, as precise as the sources allow, e.g. "18 March 1908", ' +
+      '"May – November 1450" or "1444".\n' +
+      "- year: the year the battle began, as a whole number (negative for BC). Use 0 if the sources give no year.\n" +
+      '- location: where it was fought, as the place followed by its region, e.g. "Mashkullorë, Gjirokastër". ' +
+      "Use the names the sources use, and give the place alone if they name no region.\n" +
+      "- geocodeQueries: 1-3 search phrases for looking the battlefield up on OpenStreetMap, most precise first, " +
+      "so the pin can be placed. This is the one field where you may use general geographic knowledge instead of " +
+      "the sources, and only to name where the place in `location` is today: its modern name, then district or " +
+      'region, then country, e.g. "Mashkullorë, Gjirokastër, Albania". Follow it with a broader fallback such as ' +
+      'the nearest town, e.g. "Gjirokastër, Albania". Return an empty list if the sources do not say where the ' +
+      "battle was fought.\n" +
+      '- participants: the two sides, joined by "vs", in at most 4 words each, e.g. "Albanian fighters vs Ottoman ' +
+      'forces". Name the sides only; unit numbers and commanders belong in details.\n' +
+      "- summary: 2-3 sentences, at most 60 words, saying what happened. Do not repeat the date or the location.\n" +
+      "- outcome: one sentence of at most 25 words saying how it ended. If the sources disagree or do not say, " +
+      "state that plainly instead of choosing a side.\n" +
+      "- keyPeople: up to 4 people who took part in this battle and whom the sources place at its centre, each " +
+      "with a name and a 1-3 word role in the battle, most important first. Leave out anyone who was not there, " +
+      "such as relatives, mentors or later writers.\n" +
+      "- details: up to 4 extra facts worth a line each, with a short label and a value of a few words, e.g. " +
+      'label "Part of", value "Albanian National Awakening". Suitable labels are Part of, Commanders, Forces and ' +
+      "Casualties. Include a number only if the sources state it clearly and without contradiction; otherwise " +
+      "leave it out. An empty list is fine.\n" +
+      "- citations: the references the sources themselves identify, such as the title, author and year of a " +
+      "supplied document, or works they cite. Each has a type, a title, a detail line (author, publisher, " +
+      "year or collection) and a url if one is given. Never invent a reference; return an empty list if the " +
+      "sources name none.\n" +
+      "- imageTone: the tone that fits the mood.",
+    aiSchema: {
+      type: "object",
+      properties: {
+        name: { type: "string" },
+        period: { type: "string", enum: BATTLE_PERIODS },
+        date: { type: "string" },
+        year: { type: "integer" },
+        location: { type: "string" },
+        geocodeQueries: { type: "array", items: { type: "string" } },
+        participants: { type: "string" },
+        summary: { type: "string" },
+        outcome: { type: "string" },
+        keyPeople: recordListSchema(BATTLE_RECORDS.key_people),
+        details: recordListSchema(BATTLE_RECORDS.details),
+        storySlug: { type: "string" },
+        citations: recordListSchema(BATTLE_RECORDS.citations),
+        imageTone: imageToneSchema,
+      },
+      required: [
+        "name",
+        "period",
+        "date",
+        "year",
+        "location",
+        "geocodeQueries",
+        "participants",
+        "summary",
+        "outcome",
+        "keyPeople",
+        "details",
+        "storySlug",
+        "citations",
+        "imageTone",
+      ],
+      additionalProperties: false,
+    },
+    defaults: { image_tone: "stone", ai_image: false },
   },
 };

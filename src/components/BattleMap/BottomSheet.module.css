@@ -1,0 +1,193 @@
+/*
+ * Phone: a sheet anchored to the bottom of the map. It is nearly as tall as the map and
+ * slides down out of view, so "peek" is simply the same sheet moved most of the way down.
+ * 56% here is 1 - PEEK_FRACTION in layout.ts.
+ */
+.sheet {
+  --sheet-ease: cubic-bezier(0.32, 0.72, 0, 1);
+
+  position: absolute;
+  z-index: 30;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  /* On a tablet the sheet stays phone-sized and centred instead of stretching edge to edge. */
+  max-width: 560px;
+  height: calc(100% - 12px);
+  margin-inline: auto;
+  border: 1px solid var(--color-border);
+  border-bottom: none;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  background: var(--color-bg-elev);
+  box-shadow: 0 -16px 48px rgba(0, 0, 0, 0.6);
+  overflow: clip;
+  visibility: hidden;
+  transform: translateY(104%);
+  /* Hidden only once it has finished sliding away. */
+  transition:
+    transform 0.38s var(--sheet-ease),
+    visibility 0s 0.38s;
+  /* The sheet handles vertical drags itself until it is at full height. */
+  touch-action: none;
+}
+
+.sheet[data-open="true"] {
+  visibility: visible;
+  transition: transform 0.38s var(--sheet-ease);
+}
+
+.sheet[data-open="true"][data-snap="peek"] {
+  transform: translateY(56%);
+}
+
+.sheet[data-open="true"][data-snap="full"] {
+  transform: translateY(0);
+}
+
+.sheet[data-dragging] {
+  transition: none;
+}
+
+/* Once the content is scrolled, it fades out under the grip and close button. */
+.sheet::before {
+  content: "";
+  position: absolute;
+  z-index: 2;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 56px;
+  background: linear-gradient(var(--color-bg-elev) 40%, transparent);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.sheet[data-scrolled]::before {
+  opacity: 1;
+}
+
+.grip {
+  position: absolute;
+  z-index: 3;
+  top: 0;
+  right: 56px;
+  left: 56px;
+  display: flex;
+  justify-content: center;
+  height: 28px;
+  padding-top: 9px;
+  border: none;
+  background: none;
+  cursor: grab;
+  touch-action: none;
+}
+
+.grip span {
+  width: 44px;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(246, 243, 241, 0.42);
+  transition: background-color 0.15s ease;
+}
+
+.grip:hover span,
+.grip:focus-visible span {
+  background: var(--color-text);
+}
+
+.grip:focus-visible {
+  outline: none;
+}
+
+.close {
+  position: absolute;
+  z-index: 3;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid rgba(246, 243, 241, 0.16);
+  background: rgba(5, 3, 3, 0.55);
+  backdrop-filter: blur(6px);
+  color: var(--color-text);
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.close:hover {
+  border-color: rgba(246, 243, 241, 0.4);
+  background: rgba(5, 3, 3, 0.8);
+}
+
+.close:focus-visible {
+  outline: 2px solid var(--color-accent-bright);
+  outline-offset: 2px;
+}
+
+.body {
+  flex: 1;
+  min-height: 0;
+  /* Not scrollable at all until the sheet is at full height. */
+  overflow: clip;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) transparent;
+}
+
+.sheet[data-snap="full"] .body {
+  overflow-y: auto;
+  touch-action: pan-y;
+}
+
+/* Desktop: the same element as a floating panel. 384px + margins is PANEL_SPACE in layout.ts. */
+@media (min-width: 960px) {
+  .sheet,
+  .sheet[data-open="true"] {
+    top: var(--space-4);
+    right: var(--space-4);
+    bottom: var(--space-4);
+    left: auto;
+    width: 384px;
+    max-width: none;
+    height: auto;
+    margin-inline: 0;
+    border-bottom: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
+    touch-action: auto;
+  }
+
+  .sheet {
+    transform: translateX(calc(100% + var(--space-6)));
+  }
+
+  .sheet[data-open="true"][data-snap] {
+    transform: none;
+  }
+
+  .grip {
+    display: none;
+  }
+
+  .sheet .body,
+  .sheet[data-snap="full"] .body {
+    overflow-y: auto;
+    touch-action: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sheet,
+  .sheet[data-open="true"] {
+    transition-duration: 0s;
+  }
+}

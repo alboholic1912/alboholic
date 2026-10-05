@@ -7,7 +7,7 @@ import { CONTENT_CONFIG } from "@/lib/content/config";
 import { CONTENT_TYPES, type ContentType } from "@/lib/content/types";
 import { getAiModel } from "@/lib/ai/models";
 import { getUsageSummary } from "@/lib/ai/usage";
-import { BookIcon, UsersIcon, BulbIcon, PlusIcon } from "@/components/StudioShell/icons";
+import { BookIcon, UsersIcon, MapPinIcon, BulbIcon, PlusIcon } from "@/components/StudioShell/icons";
 import styles from "./studio.module.css";
 
 export const metadata: Metadata = {
@@ -18,6 +18,7 @@ export const metadata: Metadata = {
 const TYPE_ICONS: Record<ContentType, () => JSX.Element> = {
   stories: BookIcon,
   people: UsersIcon,
+  battles: MapPinIcon,
 };
 
 export default async function StudioPage() {

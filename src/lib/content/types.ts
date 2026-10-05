@@ -1,6 +1,6 @@
-export type ContentType = "stories" | "people";
+export type ContentType = "stories" | "people" | "battles";
 
-export const CONTENT_TYPES: ContentType[] = ["stories", "people"];
+export const CONTENT_TYPES: ContentType[] = ["stories", "people", "battles"];
 
 export function isContentType(value: string): value is ContentType {
   return (CONTENT_TYPES as string[]).includes(value);
@@ -113,9 +113,48 @@ export interface PersonRow extends BaseRow {
   image_tone: ImageTone;
 }
 
+/** The filter chips on the Battles map, in display order. */
+export const BATTLE_PERIODS = ["Medieval", "Ottoman", "Independence", "WWI", "WWII", "Kosovo War"] as const;
+
+/** An optional extra on a battle card, e.g. Commander / Vrana Konti. Only shown once the card is expanded. */
+export interface BattleDetail {
+  label: string;
+  value: string;
+}
+
+export interface BattleRow extends BaseRow {
+  name: string;
+  /** One of BATTLE_PERIODS. */
+  period: string;
+  /** The date as displayed, e.g. "18 March 1908". */
+  date: string;
+  /** The year the battle began, for sorting and the list. */
+  year: number;
+  /** Place, then region, e.g. "Mashkullorë, Gjirokastër". */
+  location: string;
+  /** The map pin. Null until one is placed, and a battle without a pin is never shown on the map. */
+  lat: number | null;
+  lng: number | null;
+  /** How the pin was placed, for the editor. Never shown on the site. */
+  pin_note: string;
+  /** Who fought, e.g. "Albanian fighters vs Ottoman forces". */
+  participants: string;
+  summary: string;
+  outcome: string;
+  key_people: RelatedPerson[];
+  details: BattleDetail[];
+  story_slug: string;
+  citations: Citation[];
+  image: string | null;
+  ai_image: boolean;
+  image_tone: ImageTone;
+}
+
 export type ContentRow<T extends ContentType> = T extends "stories"
   ? StoryRow
-  : PersonRow;
+  : T extends "people"
+    ? PersonRow
+    : BattleRow;
 
 export interface IdeaRow {
   id: string;

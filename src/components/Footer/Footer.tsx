@@ -7,7 +7,8 @@ import styles from "./Footer.module.css";
 export default function Footer() {
   const pathname = usePathname();
 
-  if (pathname?.startsWith("/kalaja-cabb0da6")) {
+  // The Studio has its own chrome, and the Battles map fills the screen.
+  if (pathname?.startsWith("/kalaja-cabb0da6") || pathname === "/battles") {
     return null;
   }
 
@@ -27,6 +28,7 @@ export default function Footer() {
             <span className={styles.groupTitle}>Explore</span>
             <Link href="/stories">Stories</Link>
             <Link href="/people">People</Link>
+            <Link href="/battles">Battles</Link>
           </div>
           <div className={styles.group}>
             <span className={styles.groupTitle}>About</span>

@@ -55,6 +55,33 @@ alter table people
   add column if not exists related_places jsonb not null default '[]',
   add column if not exists citations jsonb not null default '[]';
 
+-- Battles: one pin each on the Battles map. `lat`/`lng` stay null until a pin is placed, and
+-- a battle without them is never shown. `pin_note` records how the pin was placed, for editors.
+create table if not exists battles (
+  id uuid primary key default gen_random_uuid(),
+  slug text unique not null,
+  name text not null default '',
+  period text not null default '',
+  date text not null default '',
+  year integer not null default 0,
+  location text not null default '',
+  lat double precision,
+  lng double precision,
+  pin_note text not null default '',
+  participants text not null default '',
+  summary text not null default '',
+  outcome text not null default '',
+  key_people jsonb not null default '[]',
+  details jsonb not null default '[]',
+  story_slug text not null default '',
+  citations jsonb not null default '[]',
+  image text,
+  ai_image boolean not null default false,
+  image_tone text not null default 'stone' check (image_tone in ('crimson', 'amber', 'stone', 'slate')),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
 -- Editorial workflow columns, added to every content table.
 do $$
 begin
@@ -71,7 +98,7 @@ begin
       ),
       ''
     )
-    from unnest(array['stories', 'people']) as tbl
+    from unnest(array['stories', 'people', 'battles']) as tbl
   );
 end $$;
 
@@ -97,6 +124,7 @@ create table if not exists ideas (
 
 alter table stories enable row level security;
 alter table people enable row level security;
+alter table battles enable row level security;
 alter table ideas enable row level security;
 
 do $$
@@ -121,7 +149,7 @@ begin
       ),
       ''
     )
-    from unnest(array['stories', 'people']) as tbl
+    from unnest(array['stories', 'people', 'battles']) as tbl
   );
 end $$;
 

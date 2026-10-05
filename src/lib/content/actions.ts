@@ -7,6 +7,7 @@ import { uploadImage } from "@/lib/supabase/storage";
 import { buildSourceBlocks, generateStructuredContent, type SourceInput } from "@/lib/ai/anthropic";
 import { DEFAULT_AI_MODEL, getAiModel } from "@/lib/ai/models";
 import { logUsage } from "@/lib/ai/usage";
+import { locatePin } from "@/lib/geo/geocode";
 import { CONTENT_CONFIG } from "./config";
 import { cleanRecords, parseRecordLines } from "./records";
 import { isContentType, type ContentType } from "./types";
@@ -29,16 +30,44 @@ function requireTypeAndId(formData: FormData): { type: ContentType; id: string }
   return { type, id };
 }
 
+/** Reads a latitude or longitude from a form field. Empty, non-numeric and out-of-range values are null. */
+function parseCoordinate(value: FormDataEntryValue | null, limit: number): number | null {
+  const text = typeof value === "string" ? value.trim().replace(",", ".") : "";
+  const number = text ? Number(text) : NaN;
+  return Number.isFinite(number) && Math.abs(number) <= limit ? number : null;
+}
+
 /** Claude returns camelCase keys; the tables use snake_case columns. */
 function toColumn(key: string): string {
   return key.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
 }
 
+/** How each linked type picks from the site index: which story field to fill, and which people field to match. */
+const LINK_RULES: Partial<Record<ContentType, { stories: string; noStories: string; peopleField: string }>> = {
+  people: {
+    stories:
+      "- relatedStories: the slugs of up to 4 stories from this index that are clearly about this person, " +
+      "or about events the sources say they took part in. Return an empty list if none fit.",
+    noStories: "- relatedStories: return an empty list; there are no stories to link to yet.",
+    peopleField: "relatedPeople",
+  },
+  battles: {
+    stories:
+      "- storySlug: the slug of the one story from this index that tells the story of this battle. " +
+      "Return an empty string if none does.",
+    noStories: "- storySlug: return an empty string; there are no stories to link to yet.",
+    peopleField: "keyPeople",
+  },
+};
+
 /**
- * Lists the stories and people already on the site, so a generated profile can link to
- * them. This is the one part of the prompt that isn't a source, and it says so.
+ * Lists the stories and people already on the site, so a generated profile or battle can link
+ * to them. This is the one part of the prompt that isn't a source, and it says so.
  */
-async function personLinkingContext(): Promise<{ instruction: string; storySlugs: Set<string> }> {
+async function linkingContext(type: ContentType): Promise<{ instruction: string; storySlugs: Set<string> } | null> {
+  const rules = LINK_RULES[type];
+  if (!rules) return null;
+
   const supabase = await createClient();
   const [{ data: stories }, { data: people }] = await Promise.all([
     supabase.from("stories").select("slug, title, excerpt").order("date", { ascending: false }),
@@ -51,17 +80,16 @@ async function personLinkingContext(): Promise<{ instruction: string; storySlugs
     lines.push(
       "Stories on Alboholic, as slug: title - excerpt:",
       ...stories.map((story) => `- ${story.slug}: ${story.title} - ${story.excerpt}`),
-      "- relatedStories: the slugs of up to 4 stories from this index that are clearly about this person, " +
-        "or about events the sources say they took part in. Return an empty list if none fit."
+      rules.stories
     );
   } else {
-    lines.push("- relatedStories: return an empty list; there are no stories to link to yet.");
+    lines.push(rules.noStories);
   }
 
   if (people?.length) {
     lines.push(
       `People already on Alboholic: ${people.map((person) => person.name).join("; ")}.`,
-      "When one of your relatedPeople is in that list, spell the name exactly as it appears there."
+      `When one of your ${rules.peopleField} is in that list, spell the name exactly as it appears there.`
     );
   }
 
@@ -110,7 +138,7 @@ export async function generateContent(formData: FormData) {
     }
 
     const { blocks, record } = await buildSourceBlocks(sources);
-    const links = type === "people" ? await personLinkingContext() : null;
+    const links = await linkingContext(type);
 
     const { data: generated, usage } = await generateStructuredContent<Record<string, unknown>>({
       model,
@@ -133,9 +161,18 @@ export async function generateContent(formData: FormData) {
       }
     }
 
-    if (links) {
+    if (type === "people") {
       const picked = Array.isArray(row.related_stories) ? row.related_stories : [];
-      row.related_stories = picked.filter((slug) => links.storySlugs.has(slug));
+      row.related_stories = picked.filter((slug) => links?.storySlugs.has(slug));
+    }
+
+    if (type === "battles") {
+      row.story_slug = links?.storySlugs.has(String(row.story_slug)) ? row.story_slug : "";
+
+      // Claude only names the place; the coordinates come from OpenStreetMap, never from the model.
+      const queries = Array.isArray(row.geocode_queries) ? row.geocode_queries.map(String) : [];
+      delete row.geocode_queries;
+      Object.assign(row, await locatePin(queries));
     }
 
     if (type === "stories" && Array.isArray(row.body)) {
@@ -186,6 +223,13 @@ export async function updateContent(formData: FormData) {
         .filter(Boolean);
     } else if (field.kind === "records") {
       update[field.key] = parseRecordLines(String(formData.get(field.key) ?? ""), field.columns ?? []);
+    } else if (field.kind === "coordinates") {
+      const lat = parseCoordinate(formData.get("lat"), 90);
+      const lng = parseCoordinate(formData.get("lng"), 180);
+      // A pin needs both halves, so a half-filled one is saved as no pin at all.
+      const placed = lat !== null && lng !== null;
+      update.lat = placed ? lat : null;
+      update.lng = placed ? lng : null;
     } else {
       update[field.key] = String(formData.get(field.key) ?? "");
     }

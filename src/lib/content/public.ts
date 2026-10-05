@@ -1,8 +1,11 @@
 import { createPublicClient } from "@/lib/supabase/public";
-import { PERSON_RECORDS } from "./config";
+import { BATTLE_RECORDS, PERSON_RECORDS } from "./config";
 import { cleanRecords } from "./records";
+import { fold } from "./text";
 import {
   PRONOUNS,
+  type BattleDetail,
+  type BattleRow,
   type Citation,
   type PersonFact,
   type PersonMoment,
@@ -62,6 +65,37 @@ export type Person = {
 /** An associated person, with their own profile attached when one is published. */
 export type AssociatedPerson = RelatedPerson & { profile?: Person };
 
+/** Someone named on a battle card. The slug and portrait come from their profile, when one is published. */
+export type BattlePerson = RelatedPerson & { slug?: string; image?: string };
+
+/**
+ * One pin on the Battles map. It answers where a battle was fought, who fought and how it
+ * ended; the full account is a Story. Only ever built for battles that have a pin.
+ */
+export type Battle = {
+  slug: string;
+  name: string;
+  /** One of BATTLE_PERIODS. */
+  period: string;
+  /** The date as displayed, e.g. "18 March 1908". */
+  date: string;
+  year: number;
+  /** Place, then region, e.g. "Mashkullorë, Gjirokastër". */
+  location: string;
+  lat: number;
+  lng: number;
+  participants: string;
+  summary: string;
+  outcome: string;
+  keyPeople: BattlePerson[];
+  details: BattleDetail[];
+  /** The story behind "View Story", when one is linked and published. */
+  story?: { slug: string; title: string };
+  sources: Citation[];
+  image?: string;
+  aiImage: boolean;
+};
+
 function toStory(row: StoryRow): Story {
   return {
     slug: row.slug,
@@ -100,14 +134,6 @@ function toPerson(row: PersonRow): Person {
     relatedPlaces: cleanRecords<RelatedPlace>(row.related_places, PERSON_RECORDS.related_places),
     sources: cleanRecords<Citation>(row.citations, PERSON_RECORDS.citations),
   };
-}
-
-/** Lowercases and strips diacritics, so "Skënderbeu" and "Skenderbeu" compare equal. */
-function fold(text: string): string {
-  return text
-    .normalize("NFKD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase();
 }
 
 function nameTokens(name: string): string[] {
@@ -232,3 +258,62 @@ export async function getAssociatedPeople(person: Person): Promise<AssociatedPer
   }));
 }
 
+
+// PostgREST's "no such table": supabase/schema.sql hasn't been re-run since battles were added.
+const MISSING_TABLE = "PGRST205";
+
+/**
+ * Every published battle that has a pin, oldest first, with its key people and story already
+ * resolved so the map needs nothing else. Empty until the battles table has been created.
+ */
+export async function getBattles(): Promise<Battle[]> {
+  const { data, error } = await createPublicClient()
+    .from("battles")
+    .select("*")
+    .eq("status", "published")
+    .not("lat", "is", null)
+    .not("lng", "is", null)
+    .order("year", { ascending: true });
+  if (error?.code === MISSING_TABLE) {
+    console.warn("[battles] The battles table does not exist yet. Run supabase/schema.sql in the Supabase SQL editor.");
+    return [];
+  }
+  if (error) throw new Error(error.message);
+
+  const rows = (data ?? []) as BattleRow[];
+  if (rows.length === 0) return [];
+
+  const [people, stories] = await Promise.all([getPeople(), getAllStories()]);
+
+  return rows.map((row) => {
+    // Accept a pasted URL or path as well as a bare slug.
+    const pinned = (row.story_slug ?? "").split("/").filter(Boolean).pop();
+    const name = fold(row.name).trim();
+    const story =
+      stories.find((candidate) => candidate.slug === pinned) ??
+      (name ? stories.find((candidate) => fold(`${candidate.title} ${candidate.excerpt}`).includes(name)) : undefined);
+
+    return {
+      slug: row.slug,
+      name: row.name,
+      period: row.period,
+      date: row.date,
+      year: row.year,
+      location: row.location,
+      lat: row.lat as number,
+      lng: row.lng as number,
+      participants: row.participants,
+      summary: row.summary,
+      outcome: row.outcome,
+      keyPeople: cleanRecords<RelatedPerson>(row.key_people, BATTLE_RECORDS.key_people).map((person) => {
+        const profile = people.find((candidate) => sameName(candidate.name, person.name));
+        return { ...person, slug: profile?.slug, image: profile?.image };
+      }),
+      details: cleanRecords<BattleDetail>(row.details, BATTLE_RECORDS.details),
+      story: story && { slug: story.slug, title: story.title },
+      sources: cleanRecords<Citation>(row.citations, BATTLE_RECORDS.citations),
+      image: row.image ?? undefined,
+      aiImage: row.ai_image,
+    };
+  });
+}

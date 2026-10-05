@@ -8,10 +8,11 @@ import { CONTENT_CONFIG, type FieldDef } from "@/lib/content/config";
 import { formatRecordLines } from "@/lib/content/records";
 import { isContentType, type SourceRecord } from "@/lib/content/types";
 import BackLink from "@/components/BackLink/BackLink";
+import LocationPicker from "@/components/LocationPicker/LocationPicker";
 import SubmitButton from "@/components/SubmitButton/SubmitButton";
 import styles from "../../studio.module.css";
 
-const TYPES_WITH_IMAGE = new Set(["stories", "people"]);
+const TYPES_WITH_IMAGE = new Set(["stories", "people", "battles"]);
 
 export async function generateMetadata({
   params,
@@ -144,6 +145,10 @@ export default async function EditContentPage({
   );
 }
 
+function toCoordinate(value: unknown): number | null {
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
+}
+
 function renderField(field: FieldDef, record: Record<string, unknown>) {
   const value = record[field.key];
 
@@ -202,6 +207,16 @@ function renderField(field: FieldDef, record: Record<string, unknown>) {
     );
   }
 
+  if (field.kind === "coordinates") {
+    return (
+      <div key={field.key} className={styles.field}>
+        <span className={styles.fieldLabel}>{field.label}</span>
+        <LocationPicker lat={toCoordinate(record.lat)} lng={toCoordinate(record.lng)} />
+        {field.helpText && <span className={styles.help}>{field.helpText}</span>}
+      </div>
+    );
+  }
+
   if (field.kind === "textarea") {
     return (
       <div key={field.key} className={styles.field}>
@@ -217,6 +232,7 @@ function renderField(field: FieldDef, record: Record<string, unknown>) {
       <div key={field.key} className={styles.field}>
         <label htmlFor={field.key}>{field.label}</label>
         <input id={field.key} name={field.key} type="number" defaultValue={Number(value ?? 0)} />
+        {field.helpText && <span className={styles.help}>{field.helpText}</span>}
       </div>
     );
   }

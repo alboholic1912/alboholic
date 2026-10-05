@@ -10,6 +10,7 @@ import {
   DashboardIcon,
   BookIcon,
   UsersIcon,
+  MapPinIcon,
   BulbIcon,
   LogoutIcon,
   ExternalIcon,
@@ -22,6 +23,7 @@ const NAV_ITEMS: { href: string; label: string; icon: () => JSX.Element; exact?:
   { href: "/kalaja-cabb0da6", label: "Dashboard", icon: DashboardIcon, exact: true },
   { href: "/kalaja-cabb0da6/stories", label: "Stories", icon: BookIcon },
   { href: "/kalaja-cabb0da6/people", label: "People", icon: UsersIcon },
+  { href: "/kalaja-cabb0da6/battles", label: "Battles", icon: MapPinIcon },
   { href: "/kalaja-cabb0da6/ideas", label: "Ideas", icon: BulbIcon },
 ];
 
