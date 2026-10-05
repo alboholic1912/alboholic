@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
-import PageIntro from "@/components/PageIntro/PageIntro";
-import PersonCard from "@/components/PersonCard/PersonCard";
+import PeopleBrowser from "@/components/PeopleBrowser/PeopleBrowser";
 import { getPeople } from "@/lib/content/public";
 import styles from "./people.module.css";
 
@@ -15,17 +14,20 @@ export default async function PeoplePage() {
   const people = await getPeople();
 
   return (
-    <div className="container">
-      <PageIntro
-        eyebrow="Explore"
-        title="People"
-        description="The figures whose lives are woven into Albania's history, from medieval resistance to the modern era."
-      />
-      <div className={styles.grid}>
-        {people.map((person) => (
-          <PersonCard key={person.slug} person={person} />
-        ))}
+    <>
+      <header className={styles.banner}>
+        <div className={`container ${styles.bannerInner}`}>
+          <span className={styles.eyebrow}>People</span>
+          <h1 className={styles.title}>The People of Albania</h1>
+          <p className={styles.description}>
+            The figures whose lives are woven into Albania&apos;s history, from medieval resistance to the modern era.
+          </p>
+        </div>
+      </header>
+
+      <div className="container">
+        <PeopleBrowser people={people} />
       </div>
-    </div>
+    </>
   );
 }

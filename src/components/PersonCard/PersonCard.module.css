@@ -1,13 +1,10 @@
 .card {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: var(--space-1);
-  text-align: center;
-  padding: var(--space-5) var(--space-4);
-  border-radius: var(--radius-md);
-  border: 1px solid var(--color-border-soft);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
   background: var(--color-bg-elev);
+  overflow: hidden;
   transition: border-color 0.15s ease, transform 0.15s ease;
 }
 
@@ -18,33 +15,119 @@
 
 .media {
   position: relative;
-  width: 96px;
-  height: 96px;
-  border-radius: 50%;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+}
+
+/* Portraits are usually taller than this box, so crop from the top to keep the face in frame. */
+.media img {
+  object-position: 50% 20%;
+}
+
+/* Fades the photo into the card, so the tag and name read as one block with it. */
+.media::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(180deg, transparent 55%, var(--color-bg-elev) 100%);
+}
+
+.tag {
+  position: absolute;
+  left: var(--space-4);
+  bottom: var(--space-1);
+  z-index: 2;
+  max-width: calc(100% - var(--space-6));
+  padding: 3px var(--space-2);
+  border-radius: 4px;
+  border: 1px solid var(--color-accent-dark);
+  background: rgba(60, 10, 12, 0.85);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
   overflow: hidden;
-  border: 2px solid var(--color-border);
-  margin-bottom: var(--space-2);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-4) var(--space-4);
 }
 
 .name {
-  font-size: 14px;
+  font-family: var(--font-serif);
+  font-size: 20px;
+  line-height: 1.25;
   font-weight: 700;
-  line-height: 1.3;
-}
-
-.role {
-  font-size: 12px;
-  color: var(--color-accent-bright);
+  letter-spacing: -0.01em;
 }
 
 .era {
-  font-size: 11px;
+  font-size: 14px;
   color: var(--color-text-dim);
 }
 
-.bio {
-  margin-top: var(--space-2);
-  font-size: 13px;
+.blurb {
+  display: -webkit-box;
+  margin-top: var(--space-1);
+  font-size: 14px;
   line-height: 1.5;
   color: var(--color-text-muted);
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+}
+
+.cta {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: auto;
+  padding-top: var(--space-3);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-accent-bright);
+}
+
+.cta svg {
+  transition: transform 0.15s ease;
+}
+
+.card:hover .cta svg {
+  transform: translateX(3px);
+}
+
+/* ---------- List layout ---------- */
+
+@media (min-width: 640px) {
+  .list {
+    flex-direction: row;
+  }
+
+  .list .media {
+    flex-shrink: 0;
+    width: 240px;
+    aspect-ratio: auto;
+    min-height: 150px;
+  }
+
+  .list .media::after {
+    background: linear-gradient(90deg, transparent 55%, var(--color-bg-elev) 100%);
+  }
+
+  .list .body {
+    padding: var(--space-4);
+  }
+
+  .list .blurb {
+    max-width: 70ch;
+  }
 }
