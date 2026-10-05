@@ -9,6 +9,8 @@ type ImagePlaceholderProps = {
   className?: string;
   src?: string;
   alt?: string;
+  /** Rendered width of the slot, so the browser requests a large enough file. */
+  sizes?: string;
 };
 
 export default function ImagePlaceholder({
@@ -18,10 +20,11 @@ export default function ImagePlaceholder({
   className,
   src,
   alt = "",
+  sizes = "(min-width: 960px) 33vw, (min-width: 640px) 50vw, 100vw",
 }: ImagePlaceholderProps) {
   return (
     <div className={[styles.root, !src && styles[tone], className].filter(Boolean).join(" ")}>
-      {src && <Image src={src} alt={alt} fill sizes="(min-width: 960px) 33vw, 100vw" className={styles.image} />}
+      {src && <Image src={src} alt={alt} fill sizes={sizes} quality={90} className={styles.image} />}
       {aiImage && <AiNotice />}
       {label && <span className={styles.label}>{label}</span>}
     </div>

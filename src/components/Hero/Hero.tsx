@@ -22,7 +22,7 @@ export default function Hero({ stories }: { stories: Story[] }) {
     <section className={styles.hero}>
       <div className={`container ${styles.inner}`}>
         <div className={styles.media}>
-          <ImagePlaceholder tone={story.imageTone} aiImage={story.aiImage} src={story.image} alt={story.title} />
+          <ImagePlaceholder tone={story.imageTone} aiImage={story.aiImage} src={story.image} alt={story.title} sizes="(min-width: 860px) 55vw, 100vw" />
 
           {story.credit && <span className={styles.credit}>{story.credit}</span>}
 

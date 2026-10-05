@@ -41,7 +41,7 @@ export default async function PersonPage({ params }: PageProps<"/people/[slug]">
 
       <div className={styles.header}>
         <div className={styles.media}>
-          <ImagePlaceholder tone={person.imageTone} aiImage src={person.image} alt={person.name} />
+          <ImagePlaceholder tone={person.imageTone} aiImage src={person.image} alt={person.name} sizes="140px" />
         </div>
         <div className={styles.info}>
           <h1 className={styles.name}>{person.name}</h1>

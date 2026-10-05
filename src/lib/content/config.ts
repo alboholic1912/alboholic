@@ -47,7 +47,7 @@ export const CONTENT_CONFIG: Record<ContentType, ContentTypeConfig> = {
       { key: "title", label: "Title", kind: "text" },
       { key: "category", label: "Category", kind: "text" },
       { key: "excerpt", label: "Excerpt", kind: "textarea" },
-      { key: "body", label: "Body", kind: "paragraphs", helpText: "One paragraph per line." },
+      { key: "body", label: "Body", kind: "paragraphs", helpText: 'One paragraph per line. Start a line with "## " for a section heading or "> " for a pull quote.' },
       { key: "credit", label: "Image credit", kind: "text" },
       { key: "image_tone", label: "Tone", kind: "select", options: IMAGE_TONES },
       { key: "featured", label: "Featured on homepage", kind: "checkbox" },

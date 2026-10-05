@@ -7,7 +7,7 @@ export default function PersonCard({ person }: { person: Person }) {
   return (
     <Link href={`/people/${person.slug}`} className={styles.card}>
       <div className={styles.media}>
-        <ImagePlaceholder tone={person.imageTone} aiImage src={person.image} alt={person.name} />
+        <ImagePlaceholder tone={person.imageTone} aiImage src={person.image} alt={person.name} sizes="96px" />
       </div>
       <span className={styles.name}>{person.name}</span>
       <span className={styles.role}>{person.role}</span>
