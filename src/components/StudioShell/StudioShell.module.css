@@ -1,4 +1,6 @@
 .shell {
+  --reagent: #ef4045;
+  --mono: ui-monospace, "SFMono-Regular", "Cascadia Code", Menlo, Consolas, monospace;
   display: flex;
   min-height: 100vh;
   background: var(--color-bg);
@@ -25,8 +27,8 @@
   width: 32px;
   height: 32px;
   border-radius: var(--radius-sm);
-  background: var(--color-accent-gradient);
-  font-size: 15px;
+  background: var(--reagent);
+  color: #fff;
   flex-shrink: 0;
 }
 
@@ -35,6 +37,22 @@
   font-weight: 700;
   font-size: 19px;
   letter-spacing: -0.01em;
+}
+
+.nav {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.navHeading {
+  padding: 0 var(--space-3);
+  margin-bottom: var(--space-2);
+  font-family: var(--mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-text-dim);
 }
 
 .nav ul {
@@ -64,7 +82,8 @@
 .navLinkActive {
   color: var(--color-text);
   background: var(--color-bg-elev-2);
-  box-shadow: inset 3px 0 0 var(--color-accent-bright);
+  box-shadow: inset 3px 0 0 var(--reagent);
+  background-image: linear-gradient(90deg, rgba(239, 64, 69, 0.14), transparent 70%);
 }
 
 .sidebarFooter {
@@ -99,6 +118,7 @@
 }
 
 .avatar {
+  font-family: var(--mono);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -152,6 +172,11 @@
 
 .content {
   flex: 1;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    radial-gradient(900px 380px at 12% -80px, rgba(239, 64, 69, 0.08), transparent 70%);
+  background-size: 28px 28px, 28px 28px, auto;
 }
 
 /* ---------- Topbar (mobile) ---------- */

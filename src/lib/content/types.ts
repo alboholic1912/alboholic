@@ -160,7 +160,9 @@ export interface IdeaRow {
   id: string;
   title: string;
   notes: string;
-  status: "idea" | "planned" | "archived";
+  kind: "story" | "person" | "battle";
+  sources: string;
+  status: "idea" | "planned" | "done";
   created_at: string;
   updated_at: string;
 }

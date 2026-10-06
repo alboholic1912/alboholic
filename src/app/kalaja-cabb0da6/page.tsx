@@ -7,6 +7,7 @@ import { CONTENT_CONFIG } from "@/lib/content/config";
 import { CONTENT_TYPES, type ContentType } from "@/lib/content/types";
 import { getAiModel } from "@/lib/ai/models";
 import { getUsageSummary } from "@/lib/ai/usage";
+import { createClient } from "@/lib/supabase/server";
 import { BookIcon, UsersIcon, MapPinIcon, BulbIcon, PlusIcon } from "@/components/StudioShell/icons";
 import styles from "./studio.module.css";
 
@@ -23,7 +24,11 @@ const TYPE_ICONS: Record<ContentType, () => JSX.Element> = {
 
 export default async function StudioPage() {
   await requireUser();
-  const [counts, usage] = await Promise.all([countsByStatus(), getUsageSummary()]);
+  const [counts, usage, ideaCounts] = await Promise.all([
+    countsByStatus(),
+    getUsageSummary(),
+    countIdeas(),
+  ]);
 
   const reviewQueues = await Promise.all(
     CONTENT_TYPES.map(async (type) => ({
@@ -42,7 +47,7 @@ export default async function StudioPage() {
     <div className={styles.wrap}>
       <div className={styles.dashHeader}>
         <div>
-          <p className={styles.eyebrow}>Overview</p>
+          <p className={styles.eyebrow}>Studio · Overview</p>
           <h1 className={styles.title}>Dashboard</h1>
         </div>
         <div className={styles.quickActions}>
@@ -63,7 +68,7 @@ export default async function StudioPage() {
           const publishedPct = total === 0 ? 0 : Math.round((c.published / total) * 100);
           const Icon = TYPE_ICONS[type];
           return (
-            <Link key={type} href={`/kalaja-cabb0da6/${type}`} className={styles.statCard}>
+            <Link key={type} href={`/kalaja-cabb0da6/${type}`} className={`${styles.statCard} ${styles[`kind_${type}`]}`}>
               <div className={styles.statCardTop}>
                 <span className={styles.statIcon}>
                   <Icon />
@@ -92,9 +97,22 @@ export default async function StudioPage() {
             <span className={styles.statIcon}>
               <BulbIcon />
             </span>
-            <span className={styles.statCardTitle}>Ideas</span>
+            <span className={styles.statCardTitle}>Idea Lab</span>
           </div>
-          <p className={styles.statCardText}>Future stories and plans, parked for later.</p>
+          <div className={styles.labStages}>
+            <div>
+              <div className={styles.labValue}>{ideaCounts.idea}</div>
+              <div className={styles.statLabel}>To do</div>
+            </div>
+            <div>
+              <div className={styles.labValue}>{ideaCounts.planned}</div>
+              <div className={styles.statLabel}>In progress</div>
+            </div>
+            <div>
+              <div className={styles.labValue}>{ideaCounts.done}</div>
+              <div className={styles.statLabel}>Done</div>
+            </div>
+          </div>
         </Link>
       </div>
 
@@ -120,7 +138,7 @@ export default async function StudioPage() {
                   <Link
                     key={`${type}-${item.id}`}
                     href={`/kalaja-cabb0da6/${type}/${item.id}`}
-                    className={styles.listRow}
+                    className={`${styles.listRow} ${styles[`kind_${type}`]}`}
                   >
                     <div className={styles.listRowMain}>
                       <span className={styles.listRowIcon}>
@@ -201,6 +219,16 @@ export default async function StudioPage() {
       </section>
     </div>
   );
+}
+
+async function countIdeas() {
+  const counts = { idea: 0, planned: 0, done: 0 };
+  const supabase = await createClient();
+  const { data } = await supabase.from("ideas").select("status");
+  for (const row of data ?? []) {
+    if (row.status in counts) counts[row.status as keyof typeof counts] += 1;
+  }
+  return counts;
 }
 
 function formatTokens(n: number) {

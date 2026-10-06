@@ -16,6 +16,7 @@ export default async function StudioLoginPage({
   return (
     <div className={styles.wrap}>
       <div className={styles.card}>
+        <p className={styles.eyebrow}>Alboholic Studio</p>
         <h1 className={styles.title}>Sign in</h1>
         {error && <div className={styles.error}>{error}</div>}
         <form action={login}>

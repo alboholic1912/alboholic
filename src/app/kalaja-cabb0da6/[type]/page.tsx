@@ -81,7 +81,7 @@ export default async function ContentListPage({
               <Link
                 key={item.id}
                 href={`/kalaja-cabb0da6/${type}/${item.id}`}
-                className={styles.listRow}
+                className={`${styles.listRow} ${styles[`kind_${type}`]}`}
               >
                 <div>
                   <div className={styles.listRowTitle}>{title}</div>
