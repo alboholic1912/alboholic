@@ -123,15 +123,6 @@ export function BookIcon({ size }: IconProps) {
   );
 }
 
-/** A columned hall: the nation and its long past, on the home page. */
-export function LandmarkIcon({ size }: IconProps) {
-  return (
-    <Icon size={size}>
-      <path d="M3.5 9.5 12 4l8.5 5.5M4.5 9.5h15M6.5 12.5v5M10.2 12.5v5M13.8 12.5v5M17.5 12.5v5M4.5 20.5h15" />
-    </Icon>
-  );
-}
-
 export function ListIcon({ size }: IconProps) {
   return (
     <Icon size={size}>

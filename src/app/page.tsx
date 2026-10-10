@@ -1,6 +1,5 @@
 import BattlesSection from "@/components/BattlesSection/BattlesSection";
 import Hero from "@/components/Hero/Hero";
-import HomeStrip from "@/components/HomeStrip/HomeStrip";
 import JoinStrip from "@/components/JoinStrip/JoinStrip";
 import LatestStories from "@/components/LatestStories/LatestStories";
 import PeopleSection from "@/components/PeopleSection/PeopleSection";
@@ -11,7 +10,6 @@ export default function Home() {
   return (
     <>
       <Hero />
-      <HomeStrip />
       <LatestStories />
       <PeopleSection />
       <BattlesSection />
