@@ -3,10 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 import type { Map as MapLibreMap, Marker } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
+import { loadMapLibre, type MapLibre } from "@/lib/maplibre";
 import { HOME_BOUNDS, MAP_STYLE } from "@/components/BattleMap/mapStyle";
 import styles from "./LocationPicker.module.css";
-
-type MapLibre = typeof import("maplibre-gl");
 
 /** About one metre: plenty for a battlefield, and short enough to read. */
 const PRECISION = 5;
@@ -37,10 +36,9 @@ export default function LocationPicker({ lat, lng }: { lat: number | null; lng: 
     let cancelled = false;
     let map: MapLibreMap | undefined;
 
-    import("maplibre-gl")
-      .then((module) => {
+    loadMapLibre()
+      .then((lib) => {
         if (cancelled) return;
-        const lib = ("default" in module ? module.default : module) as MapLibre;
 
         map = new lib.Map({
           container,

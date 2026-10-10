@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import ImagePlaceholder from "@/components/ImagePlaceholder/ImagePlaceholder";
 import { getAllStories, getStoryBySlug } from "@/lib/content/public";
 import { formatDate } from "@/lib/content/text";
+import { pageMetadata } from "@/lib/site";
 import styles from "./story.module.css";
 
 export const revalidate = 60;
@@ -22,10 +23,14 @@ export async function generateMetadata({
     return { title: "Story not found — Alboholic" };
   }
 
-  return {
-    title: `${story.title} — Alboholic`,
+  return pageMetadata({
+    title: story.title,
     description: story.excerpt,
-  };
+    path: `/stories/${story.slug}`,
+    image: story.image ? { url: story.image, alt: story.title } : undefined,
+    type: "article",
+    publishedTime: story.date,
+  });
 }
 
 export default async function StoryPage({ params }: PageProps<"/stories/[slug]">) {
@@ -41,7 +46,7 @@ export default async function StoryPage({ params }: PageProps<"/stories/[slug]">
     .slice(0, 3);
 
   return (
-    <article>
+    <article lang={story.lang}>
       <header className={styles.hero}>
         <div className={styles.heroMedia}>
           <ImagePlaceholder

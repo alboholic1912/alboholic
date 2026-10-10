@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import PageIntro from "@/components/PageIntro/PageIntro";
 import styles from "./InfoPage.module.css";
 
@@ -6,11 +7,14 @@ export default function InfoPage({
   title,
   description,
   paragraphs,
+  children,
 }: {
   eyebrow?: string;
   title: string;
   description?: string;
-  paragraphs: string[];
+  paragraphs: ReactNode[];
+  /** Anything that follows the text, e.g. a form. */
+  children?: ReactNode;
 }) {
   return (
     <div className="container">
@@ -19,6 +23,7 @@ export default function InfoPage({
         {paragraphs.map((paragraph, index) => (
           <p key={index}>{paragraph}</p>
         ))}
+        {children}
       </div>
     </div>
   );

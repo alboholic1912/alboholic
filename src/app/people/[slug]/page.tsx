@@ -12,6 +12,7 @@ import {
   type AssociatedPerson,
 } from "@/lib/content/public";
 import type { Citation, CitationType, Pronoun } from "@/lib/content/types";
+import { pageMetadata } from "@/lib/site";
 import { ChevronIcon, FactIcon, HomeIcon, PinIcon, SourceIcon, UserIcon } from "./icons";
 import styles from "./person.module.css";
 
@@ -47,11 +48,14 @@ export async function generateMetadata({
     return { title: "Person not found — Alboholic" };
   }
 
-  return {
-    title: `${person.name} — Alboholic`,
+  return pageMetadata({
+    title: person.name,
     description:
       person.knownFor ?? person.summary ?? [person.category ?? person.role, person.era].filter(Boolean).join(", "),
-  };
+    path: `/people/${person.slug}`,
+    image: person.image ? { url: person.image, alt: person.name } : undefined,
+    type: "profile",
+  });
 }
 
 // A profile answers "who was this person?" at a glance. What happened lives in Stories,

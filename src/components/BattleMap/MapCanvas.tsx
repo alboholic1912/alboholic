@@ -3,12 +3,11 @@
 import { useEffect, useEffectEvent, useImperativeHandle, useRef, useState, type Ref } from "react";
 import type { LngLatBoundsLike, Map as MapLibreMap, Marker } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
+import { loadMapLibre, type MapLibre } from "@/lib/maplibre";
 import type { Battle } from "@/lib/content/public";
 import { isDesktop, PANEL_SPACE, PEEK_FRACTION, placeOf, DESKTOP_QUERY } from "./layout";
 import { HOME_BOUNDS, MAP_LABELS, MAP_STYLE, MAX_BOUNDS } from "./mapStyle";
 import styles from "./MapCanvas.module.css";
-
-type MapLibre = typeof import("maplibre-gl");
 
 /** How close the map moves in on a selected battle, unless the reader is already closer. */
 const FOCUS_ZOOM = 8.6;
@@ -115,11 +114,9 @@ export default function MapCanvas({
     const cleanups: (() => void)[] = [];
     let cancelled = false;
 
-    import("maplibre-gl")
-      .then((module) => {
+    loadMapLibre()
+      .then((lib) => {
         if (cancelled) return;
-        // The package is CommonJS, so depending on the bundler its exports arrive on `default` or on the namespace.
-        const lib = ("default" in module ? module.default : module) as MapLibre;
 
         const map = new lib.Map({
           container,

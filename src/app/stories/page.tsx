@@ -1,14 +1,15 @@
-import type { Metadata } from "next";
 import PageBanner from "@/components/PageBanner/PageBanner";
 import StoriesBrowser from "@/components/StoriesBrowser/StoriesBrowser";
 import { getAllStories } from "@/lib/content/public";
+import { pageMetadata } from "@/lib/site";
 
 export const revalidate = 60;
 
-export const metadata: Metadata = {
-  title: "Stories — Alboholic",
+export const metadata = pageMetadata({
+  title: "Stories",
   description: "Stories from Albanian history, from the ancient Illyrians to modern Albania.",
-};
+  path: "/stories",
+});
 
 export default async function StoriesPage() {
   const stories = await getAllStories();

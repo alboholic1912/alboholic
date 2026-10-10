@@ -24,6 +24,10 @@ interface BaseRow {
   updated_at: string;
 }
 
+/** The languages a story can be written in, as HTML language codes. */
+export const STORY_LANGS = ["en", "sq"] as const;
+export type StoryLang = (typeof STORY_LANGS)[number];
+
 export interface StoryRow extends BaseRow {
   category: string;
   title: string;
@@ -36,6 +40,7 @@ export interface StoryRow extends BaseRow {
   ai_image: boolean;
   credit: string | null;
   featured: boolean;
+  lang: StoryLang;
 }
 
 export const PERSON_CATEGORIES = ["Freedom Fighter", "Leader", "Scholar", "Cultural Figure"] as const;

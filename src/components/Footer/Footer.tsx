@@ -12,6 +12,7 @@ const LINKS = [
   { href: "/about", label: "About" },
   { href: "/sources", label: "Sources" },
   { href: "/contact", label: "Contact" },
+  { href: "/privacy", label: "Privacy" },
 ];
 
 export default function Footer() {

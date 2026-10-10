@@ -14,6 +14,7 @@ import {
   type Pronoun,
   type RelatedPerson,
   type RelatedPlace,
+  type StoryLang,
   type StoryRow,
 } from "./types";
 
@@ -26,6 +27,8 @@ export type Story = {
   readTime: string;
   imageTone: "crimson" | "amber" | "stone" | "slate";
   aiImage: boolean;
+  /** The language the story is written in: English or Albanian. */
+  lang: StoryLang;
   credit?: string;
   body?: string[];
   image?: string;
@@ -106,6 +109,8 @@ function toStory(row: StoryRow): Story {
     readTime: row.read_time,
     imageTone: row.image_tone,
     aiImage: row.ai_image,
+    // Rows written before the column existed lack it, and are in English.
+    lang: row.lang === "sq" ? "sq" : "en",
     credit: row.credit ?? undefined,
     body: row.body?.length ? row.body : undefined,
     image: row.image ?? undefined,

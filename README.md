@@ -1,36 +1,37 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Alboholic
 
-## Getting Started
+A modern, readable home for Albanian history: long-form **Stories**, short **People** profiles and a **Battles** map.
 
-First, run the development server:
+Built with Next.js (App Router), Supabase (database, auth and image storage) and MapLibre. Content is written and published from a private Studio inside the app, which can draft entries from source documents with Claude.
+
+## Running locally
 
 ```bash
+npm install
+cp .env.local.example .env.local   # then fill in the values
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Variable | What it is |
+| --- | --- |
+| `NEXT_PUBLIC_SUPABASE_URL` | The Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | The Supabase anon (public) key |
+| `ANTHROPIC_API_KEY` | Used by the Studio to draft content |
+| `NEXT_PUBLIC_SITE_URL` | Optional. The public address, once there is a custom domain |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Database
 
-## Learn More
+The whole schema lives in `supabase/`. Paste `schema.sql` into the Supabase SQL editor, then `ai_usage.sql` and `ideas_v2.sql`. All three are safe to run again whenever they change.
 
-To learn more about Next.js, take a look at the following resources:
+Only accounts listed in the `admins` table can sign in to the Studio or write anything; `schema.sql` adds the project's first account automatically. Public sign-ups should also be switched off in Supabase (Authentication → Sign In / Providers).
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Newsletter sign-ups are stored in the `subscribers` table.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Scripts
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `npm run dev` / `npm run build` / `npm run start`
+- `npm run lint`
+- `node scripts/home-art/render.mjs` redraws the homepage artwork
+- `node scripts/icons/render.mjs` redraws the favicon and app icons

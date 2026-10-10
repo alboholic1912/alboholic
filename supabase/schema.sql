@@ -105,6 +105,10 @@ end $$;
 -- Drop the old published boolean now that `status` replaces it (no-op if absent).
 alter table stories drop column if exists published;
 
+-- The language a story is written in, so browsers and screen readers handle Albanian text properly.
+alter table stories
+  add column if not exists lang text not null default 'en' check (lang in ('en', 'sq'));
+
 -- ---------------------------------------------------------------------------
 -- Ideas / planning board — internal only, never shown on the public site.
 -- ---------------------------------------------------------------------------
@@ -119,6 +123,41 @@ create table if not exists ideas (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+-- ---------------------------------------------------------------------------
+-- Admins — the only accounts allowed into the Studio or to write anything.
+-- Being signed in is not enough: the account has to be listed here.
+-- ---------------------------------------------------------------------------
+
+create table if not exists admins (
+  user_id uuid primary key references auth.users (id) on delete cascade,
+  created_at timestamptz not null default now()
+);
+
+-- No policies on purpose: the list is only reachable through is_admin() and the SQL editor.
+alter table admins enable row level security;
+
+-- The first time this runs, the oldest account (the one that set the project up) becomes
+-- the admin. Check the result under Table Editor > admins. To add another editor later:
+--   insert into admins (user_id) select id from auth.users where email = 'someone@example.com';
+insert into admins (user_id)
+select id from auth.users
+where not exists (select 1 from admins)
+order by created_at asc
+limit 1;
+
+create or replace function public.is_admin()
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select exists (select 1 from public.admins where user_id = (select auth.uid()));
+$$;
+
+revoke all on function public.is_admin() from public;
+grant execute on function public.is_admin() to anon, authenticated;
 
 -- ---------------------------------------------------------------------------
 -- Row Level Security
@@ -141,11 +180,11 @@ begin
 
           drop policy if exists "Admin read all %1$s" on %1$I;
           create policy "Admin read all %1$s" on %1$I
-            for select using (auth.uid() is not null);
+            for select using (public.is_admin());
 
           drop policy if exists "Admin write %1$s" on %1$I;
           create policy "Admin write %1$s" on %1$I
-            for all using (auth.uid() is not null) with check (auth.uid() is not null);
+            for all using (public.is_admin()) with check (public.is_admin());
         $ddl$,
         tbl
       ),
@@ -158,7 +197,46 @@ end $$;
 -- Ideas are never public — admin only, in and out.
 drop policy if exists "Admin only ideas" on ideas;
 create policy "Admin only ideas" on ideas
-  for all using (auth.uid() is not null) with check (auth.uid() is not null);
+  for all using (public.is_admin()) with check (public.is_admin());
+
+-- AI usage log (created by supabase/ai_usage.sql, so it may not exist yet).
+do $$
+begin
+  if to_regclass('public.ai_usage') is not null then
+    drop policy if exists "Studio users can read AI usage" on public.ai_usage;
+    create policy "Studio users can read AI usage"
+      on public.ai_usage for select using (public.is_admin());
+
+    drop policy if exists "Studio users can log AI usage" on public.ai_usage;
+    create policy "Studio users can log AI usage"
+      on public.ai_usage for insert with check (public.is_admin());
+  end if;
+end $$;
+
+-- ---------------------------------------------------------------------------
+-- Newsletter subscribers. Anyone may add an address; only admins can read the list.
+-- ---------------------------------------------------------------------------
+
+create table if not exists subscribers (
+  id uuid primary key default gen_random_uuid(),
+  email text unique not null
+    check (char_length(email) <= 254 and email ~ '^[^@[:space:]]+@[^@[:space:]]+\.[^@[:space:]]+$'),
+  created_at timestamptz not null default now()
+);
+
+alter table subscribers enable row level security;
+
+drop policy if exists "Anyone can subscribe" on subscribers;
+create policy "Anyone can subscribe" on subscribers
+  for insert with check (true);
+
+drop policy if exists "Admin read subscribers" on subscribers;
+create policy "Admin read subscribers" on subscribers
+  for select using (public.is_admin());
+
+drop policy if exists "Admin delete subscribers" on subscribers;
+create policy "Admin delete subscribers" on subscribers
+  for delete using (public.is_admin());
 
 -- ---------------------------------------------------------------------------
 -- Storage bucket for uploaded images (featured images, person portraits, etc).
@@ -174,5 +252,5 @@ create policy "Public read media" on storage.objects
 
 drop policy if exists "Admin write media" on storage.objects;
 create policy "Admin write media" on storage.objects
-  for all using (bucket_id = 'media' and auth.uid() is not null)
-  with check (bucket_id = 'media' and auth.uid() is not null);
+  for all using (bucket_id = 'media' and public.is_admin())
+  with check (bucket_id = 'media' and public.is_admin());

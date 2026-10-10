@@ -3,11 +3,10 @@
 import { useEffect, useRef } from "react";
 import type { Map as MapLibreMap } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
+import { loadMapLibre } from "@/lib/maplibre";
 import { DESKTOP_QUERY } from "@/components/BattleMap/layout";
 import { HOME_BOUNDS, MAP_LABELS, MAP_STYLE } from "@/components/BattleMap/mapStyle";
 import styles from "./TeaserMap.module.css";
-
-type MapLibre = typeof import("maplibre-gl");
 
 export interface TeaserPin {
   slug: string;
@@ -39,11 +38,9 @@ export default function TeaserMap({ pins }: { pins: TeaserPin[] }) {
     let map: MapLibreMap | undefined;
     let cancelled = false;
 
-    import("maplibre-gl")
-      .then((module) => {
+    loadMapLibre()
+      .then((lib) => {
         if (cancelled) return;
-        // The package is CommonJS, so depending on the bundler its exports arrive on `default` or on the namespace.
-        const lib = ("default" in module ? module.default : module) as MapLibre;
 
         const created = new lib.Map({
           container,
