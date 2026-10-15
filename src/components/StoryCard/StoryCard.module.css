@@ -19,6 +19,11 @@
   aspect-ratio: 3 / 2;
 }
 
+/* Uploads are often squarer than the card, so crop from the top to keep heads in frame. */
+.media img {
+  object-position: 50% 20%;
+}
+
 .body {
   display: flex;
   flex: 1;

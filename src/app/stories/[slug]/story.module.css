@@ -10,6 +10,11 @@
   aspect-ratio: 3 / 2;
 }
 
+/* Uploads are often squarer than this box, so crop from the top to keep heads in frame. */
+.heroMedia img {
+  object-position: 50% 20%;
+}
+
 /* Fades the image into the hero background so the text stays readable. */
 .heroMedia::after {
   content: "";
