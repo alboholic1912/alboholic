@@ -179,12 +179,13 @@ export async function getFeaturedStories(limit = 2): Promise<Story[]> {
   return ((data ?? []) as StoryRow[]).map(toStory);
 }
 
-export async function getLatestStories(limit = 6): Promise<Story[]> {
+/** The most recently uploaded stories, newest first, by the moment they were created rather than their display date. */
+export async function getLatestStories(limit = 4): Promise<Story[]> {
   const { data, error } = await createPublicClient()
     .from("stories")
     .select("*")
     .eq("status", "published")
-    .order("date", { ascending: false })
+    .order("created_at", { ascending: false })
     .limit(limit);
   if (error) throw new Error(error.message);
   return ((data ?? []) as StoryRow[]).map(toStory);
