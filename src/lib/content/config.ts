@@ -55,6 +55,8 @@ export interface ContentTypeConfig {
   fields: FieldDef[];
   /** Instruction appended after the sources, telling Claude what to produce. */
   aiInstruction: string;
+  /** Replaces the default research-assistant system prompt, for types written in the author's voice. */
+  aiSystem?: string;
   /** JSON schema Claude must return. */
   aiSchema: JsonSchema;
   /** Default row values for a freshly generated item, before the AI output is merged in. */
@@ -154,10 +156,24 @@ export const CONTENT_CONFIG: Record<ContentType, ContentTypeConfig> = {
       { key: "featured", label: "Featured on homepage", kind: "checkbox" },
       { key: "ai_image", label: "Featured image is AI-generated", kind: "checkbox" },
     ],
+    aiSystem:
+      "You are a writer for Alboholic, a site about Albanian history. The author gives you their material: " +
+      "notes, a thesis, an argument or documents. Your job is to turn that material into a story told in the " +
+      "author's voice, the way a ghostwriter would.\n\n" +
+      "Treat the material as the author's own account. Its claims and interpretations are the premise of the " +
+      "story, so state them directly as the narrative's own statements. Do not report them second-hand: never " +
+      'write "according to the source", "the text claims", "some believe", "it is said" or similar, and do not ' +
+      "cite or attribute statements to the material, a document or its author.\n\n" +
+      "Do not add disclaimers, caveats, counterarguments, mainstream or competing views, or corrections from " +
+      "your own knowledge, and do not comment on whether the thesis is widely accepted. That is the author's " +
+      "call, not yours. Where pieces of material disagree, follow the author's pasted text and the thesis it " +
+      "argues for.\n\n" +
+      "Stay faithful to the material: do not invent names, dates, quotes or events it does not contain. Write " +
+      "vivid, confident, engaging narrative prose for a general audience.",
     aiInstruction:
       "Produce a story for the Stories section: a category label, a compelling title, a one-to-two " +
-      "sentence excerpt, and a body made of 3-6 paragraphs telling the story in full, all grounded strictly " +
-      "in the sources above. Also suggest an image_tone that fits the mood.",
+      "sentence excerpt, and a body made of 3-6 paragraphs telling the story in full, built from the " +
+      "author's material above and told as the author tells it. Also suggest an image_tone that fits the mood.",
     aiSchema: {
       type: "object",
       properties: {

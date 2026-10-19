@@ -142,6 +142,7 @@ export async function generateContent(formData: FormData) {
 
     const { data: generated, usage } = await generateStructuredContent<Record<string, unknown>>({
       model,
+      system: config.aiSystem,
       typeInstruction: config.aiInstruction + (links?.instruction ?? ""),
       sourceBlocks: blocks,
       jsonSchema: config.aiSchema,

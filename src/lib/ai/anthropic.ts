@@ -73,11 +73,13 @@ const GROUNDING_INSTRUCTION =
 
 export async function generateStructuredContent<T>({
   model,
+  system = GROUNDING_INSTRUCTION,
   typeInstruction,
   sourceBlocks,
   jsonSchema,
 }: {
   model: string;
+  system?: string;
   typeInstruction: string;
   sourceBlocks: Anthropic.ContentBlockParam[];
   jsonSchema: Record<string, unknown>;
@@ -96,7 +98,7 @@ export async function generateStructuredContent<T>({
     response = await ai.messages.create({
       model,
       max_tokens: MAX_OUTPUT_TOKENS,
-      system: GROUNDING_INSTRUCTION,
+      system,
       messages: [{ role: "user", content: [...sourceBlocks, { type: "text", text: typeInstruction }] }],
       output_config: {
         format: { type: "json_schema", schema: jsonSchema },
