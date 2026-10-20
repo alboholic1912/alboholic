@@ -455,11 +455,14 @@ a.entityName:hover {
     min-height: 480px;
   }
 
-  /* A height-driven box pinned right, so a portrait is never stretched across the hero. */
+  /*
+   * A height-driven box pinned right, so a portrait is never stretched across the hero. On a
+   * screen wider than the container it stops in line with the container's right edge.
+   */
   .heroMedia {
     position: absolute;
     top: 0;
-    right: 0;
+    right: max(0px, calc((100% - var(--container-max)) / 2 + var(--space-6)));
     bottom: 0;
     width: auto;
     max-width: 62%;
@@ -542,5 +545,21 @@ a.entityName:hover {
 
   .archive {
     gap: var(--space-7);
+  }
+}
+
+/* Past this width the portrait no longer reaches the window edge, so its right edge fades out too. */
+@media (min-width: 1192px) {
+  .heroMedia::after {
+    background:
+      linear-gradient(270deg, var(--color-bg-elev) 0%, rgba(13, 10, 10, 0.6) 8%, transparent 24%),
+      linear-gradient(
+        90deg,
+        var(--color-bg-elev) 0%,
+        rgba(13, 10, 10, 0.94) 8%,
+        rgba(13, 10, 10, 0.72) 22%,
+        rgba(13, 10, 10, 0.34) 42%,
+        transparent 66%
+      );
   }
 }

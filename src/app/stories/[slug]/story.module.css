@@ -277,11 +277,14 @@
     display: flex;
   }
 
-  /* Height-driven 3:2 box pinned right, so a 3:2 upload is never cropped. */
+  /*
+   * Height-driven 3:2 box pinned right, so a 3:2 upload is never cropped. On a screen wider
+   * than the container it stops in line with the container's right edge, not the window's.
+   */
   .heroMedia {
     position: absolute;
     top: 0;
-    right: 0;
+    right: max(0px, calc((100% - var(--container-max)) / 2 + var(--space-6)));
     bottom: 0;
     width: auto;
     max-width: 68%;
@@ -319,5 +322,14 @@
   .aside {
     position: sticky;
     top: 96px;
+  }
+}
+
+/* Past this width the image no longer reaches the window edge, so its right edge fades out too. */
+@media (min-width: 1192px) {
+  .heroMedia::after {
+    background:
+      linear-gradient(270deg, var(--color-bg-elev) 0%, transparent 22%),
+      linear-gradient(90deg, var(--color-bg-elev) 0%, rgba(13, 10, 10, 0.55) 30%, transparent 62%);
   }
 }

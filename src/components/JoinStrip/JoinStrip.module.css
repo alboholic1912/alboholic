@@ -84,3 +84,12 @@
     padding-left: min(400px, 34%);
   }
 }
+
+/* Past this width the fortress starts in line with the container, so it fades in from the left too. */
+@media (min-width: 1192px) {
+  .art {
+    left: calc((100% - var(--container-max)) / 2 + var(--space-6));
+    -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 18%, #000 30%, transparent 100%);
+    mask-image: linear-gradient(90deg, transparent 0%, #000 18%, #000 30%, transparent 100%);
+  }
+}
