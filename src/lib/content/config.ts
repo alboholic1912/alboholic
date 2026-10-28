@@ -139,6 +139,21 @@ function recordsHelp(columns: RecordColumn[], example: string): string {
   return `One per line: ${format}. For example: ${example}`;
 }
 
+/** Appended to the instruction when the editor asks for an AI image, so Claude also describes the scene. */
+export const IMAGE_BRIEF_INSTRUCTION =
+  "\n\n- imageBrief: 2-4 sentences telling an illustrator what the featured image should show: the people, " +
+  "the place, the period, clothing, weather and mood, taken only from the material above. Describe the scene " +
+  "itself; do not name an art style, and do not ask for any text, captions or lettering in the image.";
+
+/** The type's schema with an `imageBrief` field added, for generations that also make an image. */
+export function withImageBrief(schema: JsonSchema): JsonSchema {
+  return {
+    ...schema,
+    properties: { ...(schema.properties as JsonSchema), imageBrief: { type: "string" } },
+    required: [...(schema.required as string[]), "imageBrief"],
+  };
+}
+
 export const CONTENT_CONFIG: Record<ContentType, ContentTypeConfig> = {
   stories: {
     type: "stories",

@@ -7,6 +7,7 @@ import { AI_MODELS, DEFAULT_AI_MODEL } from "@/lib/ai/models";
 import { isContentType } from "@/lib/content/types";
 import BackLink from "@/components/BackLink/BackLink";
 import SubmitButton from "@/components/SubmitButton/SubmitButton";
+import ImagePromptFields from "@/components/ImagePromptFields/ImagePromptFields";
 import styles from "../../studio.module.css";
 
 // Claude generation (especially Sonnet with large PDFs) can run close to
@@ -67,6 +68,19 @@ export default async function NewContentPage({
             <label htmlFor="files">PDFs / documents</label>
             <input id="files" name="files" type="file" accept=".pdf,.txt,application/pdf,text/plain" multiple />
           </div>
+        </div>
+
+        <div className={styles.section}>
+          <div className={styles.sectionTitle}>Featured image</div>
+          <p className={styles.help}>
+            Optional. Attach a real image and OpenAI will make the featured image from it, your prompt, and a scene
+            description Claude writes from the sources. It starts on the next page once the text is ready.
+          </p>
+          <ImagePromptFields
+            fieldClassName={styles.field}
+            helpClassName={styles.help}
+            referenceHelp="PNG, JPEG or WebP. Leave it empty to upload an image yourself later."
+          />
         </div>
 
         <div className={styles.section}>

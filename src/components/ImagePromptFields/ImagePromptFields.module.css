@@ -1,0 +1,74 @@
+.label {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.switch {
+  display: inline-flex;
+  align-self: flex-start;
+  padding: 3px;
+  gap: 3px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-bg);
+}
+
+/* Doubled up to outrank the Studio's `.field label` style, which these labels sit inside. */
+.switch .option {
+  position: relative;
+  padding: var(--space-2) var(--space-4);
+  border-radius: 999px;
+  font-family: var(--mono);
+  font-size: 0.74rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.switch .option:hover {
+  color: var(--color-text);
+}
+
+.switch .optionActive,
+.switch .optionActive:hover {
+  background: var(--reagent);
+  color: #fff;
+}
+
+/* Visually hidden but still focusable, so the switch works with the keyboard. */
+.radio {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+}
+
+.option:has(.radio:focus-visible) {
+  outline: 2px solid var(--reagent);
+  outline-offset: 2px;
+}
+
+.promptHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.reset {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--color-text-dim);
+  font-size: 0.8rem;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.reset:hover {
+  color: var(--color-text);
+}

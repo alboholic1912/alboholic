@@ -8,7 +8,8 @@ import { buildSourceBlocks, generateStructuredContent, type SourceInput } from "
 import { DEFAULT_AI_MODEL, getAiModel } from "@/lib/ai/models";
 import { logUsage } from "@/lib/ai/usage";
 import { locatePin } from "@/lib/geo/geocode";
-import { CONTENT_CONFIG } from "./config";
+import { CONTENT_CONFIG, IMAGE_BRIEF_INSTRUCTION, withImageBrief } from "./config";
+import { createImageJob, readImageRequest } from "./imageJobs";
 import { cleanRecords, parseRecordLines } from "./records";
 import { isContentType, type ContentType } from "./types";
 import { slugify } from "./slug";
@@ -137,17 +138,28 @@ export async function generateContent(formData: FormData) {
       throw new Error("Add at least one source: text or a PDF.");
     }
 
+    // Checked before calling Claude, so a bad image field doesn't waste a generation.
+    // Without a reference image no image is made, so the prompt box is ignored.
+    const referenceField = formData.get("referenceImage");
+    const imageRequest =
+      referenceField instanceof File && referenceField.size > 0 ? readImageRequest(formData) : null;
+    const wantsImage = imageRequest !== null;
+
     const { blocks, record } = await buildSourceBlocks(sources);
     const links = await linkingContext(type);
 
     const { data: generated, usage } = await generateStructuredContent<Record<string, unknown>>({
       model,
       system: config.aiSystem,
-      typeInstruction: config.aiInstruction + (links?.instruction ?? ""),
+      typeInstruction:
+        config.aiInstruction + (wantsImage ? IMAGE_BRIEF_INSTRUCTION : "") + (links?.instruction ?? ""),
       sourceBlocks: blocks,
-      jsonSchema: config.aiSchema,
+      jsonSchema: wantsImage ? withImageBrief(config.aiSchema) : config.aiSchema,
     });
     await logUsage(type, usage);
+
+    const imageBrief = String(generated.imageBrief ?? "");
+    delete generated.imageBrief;
 
     const row: Record<string, unknown> = { ...config.defaults, sources: record, status: "review" };
 
@@ -190,7 +202,26 @@ export async function generateContent(formData: FormData) {
       throw new Error(`Could not save the generated ${config.label.toLowerCase()}: ${error.message}`);
     }
 
-    redirect(`${ADMIN_PATH}/${type}/${data.id}`);
+    // The image itself is made by the edit page, in a request of its own. If it can't even be
+    // queued, the text is already saved, so say so there rather than losing the generation.
+    let imageError = "";
+    if (imageRequest?.reference) {
+      try {
+        await createImageJob({
+          type,
+          id: data.id,
+          mode: imageRequest.mode,
+          prompt: imageRequest.prompt,
+          brief: imageBrief,
+          reference: imageRequest.reference,
+        });
+      } catch (err) {
+        console.error(`[generateContent] type=${type} could not queue the image:`, err);
+        imageError = err instanceof Error ? err.message : "Could not queue the image.";
+      }
+    }
+
+    redirect(`${ADMIN_PATH}/${type}/${data.id}${imageError ? `?imageError=${encodeURIComponent(imageError)}` : ""}`);
   } catch (err) {
     unstable_rethrow(err);
     console.error(`[generateContent] type=${type} failed:`, err);
