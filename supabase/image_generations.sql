@@ -18,6 +18,10 @@ create table if not exists public.image_generations (
   image text
 );
 
+-- The OpenAI model chosen in the Studio. Rows from before the picker all used gpt-image-2.
+alter table public.image_generations
+  add column if not exists model text not null default 'gpt-image-2';
+
 create index if not exists image_generations_content_idx
   on public.image_generations (content_type, content_id, created_at desc);
 

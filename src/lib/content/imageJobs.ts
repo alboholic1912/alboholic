@@ -2,6 +2,7 @@ import "server-only";
 import { createClient } from "@/lib/supabase/server";
 import { uploadMedia } from "@/lib/supabase/storage";
 import { isImageMode, MAX_IMAGE_PROMPT_LENGTH, type ImageMode } from "@/lib/ai/imagePrompts";
+import { DEFAULT_IMAGE_MODEL, getImageModel } from "@/lib/ai/models";
 import type { ContentType } from "./types";
 
 export type ImageJobStatus = "pending" | "generating" | "done" | "failed";
@@ -13,6 +14,7 @@ export interface ImageJob {
   content_type: ContentType;
   content_id: string;
   mode: ImageMode;
+  model: string;
   prompt: string;
   brief: string;
   reference_path: string;
@@ -33,6 +35,7 @@ const MAX_REFERENCE_BYTES = 20 * 1024 * 1024;
 
 export interface ImageRequest {
   mode: ImageMode;
+  model: string;
   prompt: string;
   reference: File | null;
 }
@@ -43,6 +46,8 @@ export function readImageRequest(formData: FormData): ImageRequest {
   const reference = file instanceof File && file.size > 0 ? file : null;
   const mode = formData.get("imageMode");
   const prompt = String(formData.get("imagePrompt") ?? "").trim();
+  // Only allow known models so a crafted request can't pick an arbitrary (expensive) one.
+  const model = getImageModel(String(formData.get("imageModel") ?? ""))?.id ?? DEFAULT_IMAGE_MODEL;
 
   if (reference) {
     if (!REFERENCE_TYPES[reference.type]) {
@@ -62,7 +67,7 @@ export function readImageRequest(formData: FormData): ImageRequest {
     throw new Error(`The image prompt is too long (over ${MAX_IMAGE_PROMPT_LENGTH} characters).`);
   }
 
-  return { mode, prompt, reference };
+  return { mode, model, prompt, reference };
 }
 
 /** Queues an image for a content item. The edit page picks it up and runs it. */
@@ -70,6 +75,7 @@ export async function createImageJob({
   type,
   id,
   mode,
+  model,
   prompt,
   brief,
   reference,
@@ -77,6 +83,7 @@ export async function createImageJob({
   type: ContentType;
   id: string;
   mode: ImageMode;
+  model: string;
   prompt: string;
   brief: string;
   /** A new upload, or the storage path of a reference uploaded earlier. */
@@ -92,6 +99,7 @@ export async function createImageJob({
     content_type: type,
     content_id: id,
     mode,
+    model,
     prompt,
     brief,
     reference_path: referencePath,

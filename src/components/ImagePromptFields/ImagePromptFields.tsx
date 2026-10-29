@@ -8,6 +8,7 @@ import {
   IMAGE_MODES,
   type ImageMode,
 } from "@/lib/ai/imagePrompts";
+import { DEFAULT_IMAGE_MODEL, IMAGE_MODELS } from "@/lib/ai/models";
 import styles from "./ImagePromptFields.module.css";
 
 type Props = {
@@ -17,6 +18,7 @@ type Props = {
   defaultMode?: ImageMode;
   /** The prompt last used for `defaultMode`, shown instead of its template. */
   defaultPrompt?: string;
+  defaultModel?: string;
   referenceHelp: string;
 };
 
@@ -29,6 +31,7 @@ export default function ImagePromptFields({
   helpClassName,
   defaultMode = "recreation",
   defaultPrompt,
+  defaultModel,
   referenceHelp,
 }: Props) {
   const [mode, setMode] = useState<ImageMode>(defaultMode);
@@ -96,6 +99,17 @@ export default function ImagePromptFields({
         <span className={helpClassName}>
           The title and a short scene description written by Claude from the sources are added to this prompt automatically.
         </span>
+      </div>
+
+      <div className={fieldClassName}>
+        <label htmlFor="imageModel">Generate image with</label>
+        <select id="imageModel" name="imageModel" defaultValue={defaultModel ?? DEFAULT_IMAGE_MODEL}>
+          {IMAGE_MODELS.map((m) => (
+            <option key={m.id} value={m.id}>
+              {m.label} — {m.description}
+            </option>
+          ))}
+        </select>
       </div>
     </>
   );

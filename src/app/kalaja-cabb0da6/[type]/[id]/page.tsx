@@ -10,6 +10,7 @@ import { isContentType, type ContentType, type SourceRecord } from "@/lib/conten
 import { getLatestImageJob, type ImageJob } from "@/lib/content/imageJobs";
 import { regenerateImage } from "@/lib/content/imageActions";
 import { IMAGE_MODE_LABELS } from "@/lib/ai/imagePrompts";
+import { getImageModel } from "@/lib/ai/models";
 import { mediaUrl } from "@/lib/supabase/storage";
 import BackLink from "@/components/BackLink/BackLink";
 import ImageJobRunner from "@/components/ImageJobRunner/ImageJobRunner";
@@ -196,7 +197,7 @@ function AiImageSection({
           </div>
           {job.status === "done" && job.image && (
             <div className={styles.field}>
-              <span className={styles.fieldLabel}>Last result ({IMAGE_MODE_LABELS[job.mode]})</span>
+              <span className={styles.fieldLabel}>Last result ({IMAGE_MODE_LABELS[job.mode]} · {getImageModel(job.model)?.label ?? job.model})</span>
               <Image src={job.image} alt="" width={160} height={120} className={styles.thumb} style={{ objectFit: "cover" }} unoptimized />
             </div>
           )}
@@ -214,6 +215,7 @@ function AiImageSection({
             helpClassName={styles.help}
             defaultMode={job?.mode}
             defaultPrompt={job?.prompt}
+            defaultModel={job?.model}
             referenceHelp={
               job
                 ? "Optional. Leave it empty to reuse the reference shown above."

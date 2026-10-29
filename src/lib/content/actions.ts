@@ -211,6 +211,7 @@ export async function generateContent(formData: FormData) {
           type,
           id: data.id,
           mode: imageRequest.mode,
+          model: imageRequest.model,
           prompt: imageRequest.prompt,
           brief: imageBrief,
           reference: imageRequest.reference,

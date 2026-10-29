@@ -2,6 +2,7 @@ import "server-only";
 import OpenAI, { toFile } from "openai";
 import type { ContentType } from "@/lib/content/types";
 import type { ImageMode } from "./imagePrompts";
+import { getImageModel } from "./models";
 import type { UsageInfo } from "./anthropic";
 
 let client: OpenAI | null = null;
@@ -17,8 +18,6 @@ function getClient() {
   return client;
 }
 
-/** Overridable so a newer model can be tried without a code change. */
-export const IMAGE_MODEL = process.env.OPENAI_IMAGE_MODEL || "gpt-image-2";
 const IMAGE_QUALITY = "high";
 
 // Stories and battles show wide 3:2 frames; people are cropped to 4:5 cards and 4:3 headers, so square suits both.
@@ -38,29 +37,34 @@ export interface ReferenceImage {
 }
 
 export async function generateImageFromReference({
+  model,
   type,
   mode,
   prompt,
   reference,
 }: {
+  model: string;
   type: ContentType;
   mode: ImageMode;
   prompt: string;
   reference: ReferenceImage;
 }): Promise<{ bytes: Buffer; mimeType: string; extension: string; usage: UsageInfo }> {
+  if (!getImageModel(model)) {
+    throw new Error("Unknown image model.");
+  }
   const ai = getClient();
 
   let response: OpenAI.ImagesResponse;
   try {
     response = await ai.images.edit({
-      model: IMAGE_MODEL,
+      model,
       image: await toFile(reference.bytes, reference.name, { type: reference.mimeType }),
       prompt,
       size: IMAGE_SIZES[type],
       quality: IMAGE_QUALITY,
       output_format: "webp",
       // Restoration has to keep the real face; recreation is free to reinterpret it.
-      ...(mode === "restoration" && FIDELITY_MODELS.has(IMAGE_MODEL) ? { input_fidelity: "high" as const } : {}),
+      ...(mode === "restoration" && FIDELITY_MODELS.has(model) ? { input_fidelity: "high" as const } : {}),
     });
   } catch (err) {
     console.error("[openai] Generating image failed:", err);
@@ -83,7 +87,7 @@ export async function generateImageFromReference({
     mimeType: "image/webp",
     extension: "webp",
     usage: {
-      model: IMAGE_MODEL,
+      model,
       inputTokens: response.usage?.input_tokens ?? 0,
       outputTokens: response.usage?.output_tokens ?? 0,
       cacheReadTokens: 0,

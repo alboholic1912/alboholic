@@ -5,7 +5,7 @@ import { requireUser } from "@/lib/supabase/dal";
 import { countsByStatus, listContent } from "@/lib/content/data";
 import { CONTENT_CONFIG } from "@/lib/content/config";
 import { CONTENT_TYPES, type ContentType } from "@/lib/content/types";
-import { getAiModel } from "@/lib/ai/models";
+import { getAnyModel } from "@/lib/ai/models";
 import { getUsageSummary } from "@/lib/ai/usage";
 import { createClient } from "@/lib/supabase/server";
 import { BookIcon, UsersIcon, MapPinIcon, BulbIcon, PlusIcon } from "@/components/StudioShell/icons";
@@ -206,7 +206,7 @@ export default async function StudioPage() {
             {Object.entries(usage.byModel).map(([modelId, bucket]) => (
               <div key={modelId} className={styles.totalsRow}>
                 <span>
-                  {getAiModel(modelId)?.label ?? modelId} · {bucket.generations} generation
+                  {getAnyModel(modelId)?.label ?? modelId} · {bucket.generations} generation
                   {bucket.generations === 1 ? "" : "s"} · {formatTokens(bucket.inputTokens)} in /{" "}
                   {formatTokens(bucket.outputTokens)} out
                 </span>

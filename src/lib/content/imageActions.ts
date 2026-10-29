@@ -48,6 +48,7 @@ export async function runImageGeneration(jobId: string): Promise<{ ok: boolean; 
 
     const referenceBlob = await downloadMedia(job.reference_path);
     const { bytes, mimeType, extension, usage } = await generateImageFromReference({
+      model: job.model,
       type,
       mode: job.mode,
       prompt: buildImagePrompt(job, config.label, title),
@@ -93,14 +94,14 @@ export async function regenerateImage(formData: FormData) {
 
   const editPath = `${ADMIN_PATH}/${type}/${id}`;
   try {
-    const { mode, prompt, reference } = readImageRequest(formData);
+    const { mode, model, prompt, reference } = readImageRequest(formData);
     const previous = await getLatestImageJob(type, id);
     const source = reference ?? (previous ? { path: previous.reference_path } : null);
     if (!source) {
       throw new Error("Attach a reference image first.");
     }
 
-    await createImageJob({ type, id, mode, prompt, brief: previous?.brief ?? "", reference: source });
+    await createImageJob({ type, id, mode, model, prompt, brief: previous?.brief ?? "", reference: source });
   } catch (err) {
     unstable_rethrow(err);
     const message = err instanceof Error ? err.message : "Could not start the image.";
