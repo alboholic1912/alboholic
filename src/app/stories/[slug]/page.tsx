@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import ImagePlaceholder from "@/components/ImagePlaceholder/ImagePlaceholder";
+import ReadingMode from "@/components/ReadingMode/ReadingMode";
+import { BodyBlock } from "@/components/StoryBody/StoryBody";
 import { getAllStories, getStoryBySlug } from "@/lib/content/public";
 import { formatDate } from "@/lib/content/text";
 import { pageMetadata } from "@/lib/site";
@@ -77,10 +79,21 @@ export default async function StoryPage({ params }: PageProps<"/stories/[slug]">
             </div>
             <h1 className={styles.title}>{story.title}</h1>
             <p className={styles.excerpt}>{story.excerpt}</p>
-            <span className={styles.metaItem}>
-              <ClockIcon />
-              {story.readTime}
-            </span>
+            <div className={styles.metaRow}>
+              <span className={styles.metaItem}>
+                <ClockIcon />
+                {story.readTime}
+              </span>
+              {story.body && (
+                <ReadingMode
+                  title={story.title}
+                  category={story.category}
+                  date={formatDate(story.date)}
+                  readTime={story.readTime}
+                  body={story.body}
+                />
+              )}
+            </div>
           </div>
         </div>
       </header>
@@ -135,19 +148,6 @@ export default async function StoryPage({ params }: PageProps<"/stories/[slug]">
       </div>
     </article>
   );
-}
-
-// Body lines are plain paragraphs, except "## " starts a section heading and "> " a pull quote.
-function BodyBlock({ text }: { text: string }) {
-  if (text.startsWith("## ")) {
-    return <h2>{text.slice(3)}</h2>;
-  }
-
-  if (text.startsWith("> ")) {
-    return <blockquote>{text.slice(2)}</blockquote>;
-  }
-
-  return <p>{text}</p>;
 }
 
 function HomeIcon() {

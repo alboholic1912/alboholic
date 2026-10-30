@@ -1,0 +1,353 @@
+/* Button in the story hero that opens the reader. */
+.trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 7px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: rgba(246, 243, 241, 0.04);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.trigger:hover {
+  border-color: var(--color-accent);
+  background: rgba(184, 24, 28, 0.12);
+}
+
+.trigger:focus-visible {
+  outline: 2px solid var(--color-accent-bright);
+  outline-offset: 2px;
+}
+
+/* Full-screen reader. Covers the header, tab bar and everything else on the page. */
+.overlay {
+  --reader-bg: #121010;
+  --reader-text: #e6e1dd;
+  --reader-muted: #958e88;
+  --reader-rule: rgba(230, 225, 221, 0.12);
+  --reader-accent: #ef4045;
+  --reader-bar: rgba(18, 16, 16, 0.92);
+  --reader-font: Georgia, "Times New Roman", serif;
+
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: var(--reader-bg);
+  color: var(--reader-text);
+  color-scheme: dark;
+  animation: fadeIn 0.2s ease;
+}
+
+.overlay[data-theme="sepia"] {
+  --reader-bg: #f4ecd8;
+  --reader-text: #3b2f22;
+  --reader-muted: #7d6c57;
+  --reader-rule: rgba(59, 47, 34, 0.14);
+  --reader-accent: #a3151a;
+  --reader-bar: rgba(244, 236, 216, 0.94);
+  color-scheme: light;
+}
+
+.overlay[data-theme="light"] {
+  --reader-bg: #fbfaf8;
+  --reader-text: #1d1a18;
+  --reader-muted: #6b6560;
+  --reader-rule: rgba(29, 26, 24, 0.1);
+  --reader-accent: #b8181c;
+  --reader-bar: rgba(251, 250, 248, 0.94);
+  color-scheme: light;
+}
+
+.overlay[data-face="sans"] {
+  --reader-font: var(--font-sans);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+}
+
+.progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 3;
+  height: 3px;
+}
+
+.progressFill {
+  height: 100%;
+  background: var(--reader-accent);
+  transform: scaleX(0);
+  transform-origin: left;
+}
+
+.toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: calc(var(--space-2) + env(safe-area-inset-top, 0px)) var(--space-4) var(--space-2);
+  background: var(--reader-bar);
+  border-bottom: 1px solid var(--reader-rule);
+  backdrop-filter: blur(8px);
+  font-family: var(--font-sans);
+  transition: transform 0.25s ease, opacity 0.25s ease;
+}
+
+.toolbarHidden {
+  transform: translateY(-100%);
+  opacity: 0;
+}
+
+/* Keyboard users always get the toolbar back. */
+.toolbar:focus-within {
+  transform: none;
+  opacity: 1;
+}
+
+.exit {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: 36px;
+  padding: 0 var(--space-3) 0 var(--space-2);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--reader-text);
+  cursor: pointer;
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.group {
+  display: flex;
+  align-items: center;
+}
+
+.tool,
+.swatchButton {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--reader-text);
+  cursor: pointer;
+}
+
+.exit:hover,
+.tool:hover:not(:disabled),
+.swatchButton:hover {
+  background: var(--reader-rule);
+}
+
+.exit:focus-visible,
+.tool:focus-visible,
+.swatchButton:focus-visible,
+.endButton:focus-visible {
+  outline: 2px solid var(--reader-accent);
+  outline-offset: 1px;
+}
+
+.tool:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.smallA {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.bigA {
+  font-size: 19px;
+  font-weight: 600;
+}
+
+.faceSerif,
+.faceSans {
+  font-size: 16px;
+}
+
+.faceSerif {
+  font-family: Georgia, "Times New Roman", serif;
+}
+
+.faceSans {
+  font-family: var(--font-sans);
+  font-weight: 500;
+}
+
+.swatch {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1px solid rgba(128, 120, 112, 0.5);
+}
+
+.swatch[data-swatch="dark"] {
+  background: #121010;
+}
+
+.swatch[data-swatch="sepia"] {
+  background: #f4ecd8;
+}
+
+.swatch[data-swatch="light"] {
+  background: #ffffff;
+}
+
+.swatchButton[aria-checked="true"] .swatch {
+  box-shadow: 0 0 0 2px var(--reader-bg), 0 0 0 4px var(--reader-accent);
+}
+
+/* The text column. */
+.page {
+  max-width: 680px;
+  margin-inline: auto;
+  padding: var(--space-7) var(--space-5) var(--space-8);
+  font-family: var(--reader-font);
+}
+
+.head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding-bottom: var(--space-6);
+  margin-bottom: var(--space-6);
+  border-bottom: 1px solid var(--reader-rule);
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--reader-muted);
+}
+
+.category {
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--reader-accent);
+}
+
+.title {
+  font-family: var(--font-serif);
+  font-size: clamp(28px, 6vw, 44px);
+  line-height: 1.12;
+  font-weight: 700;
+  text-wrap: balance;
+}
+
+.text {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1em;
+  font-size: var(--reader-size, 20px);
+  line-height: 1.8;
+}
+
+.text p {
+  text-wrap: pretty;
+}
+
+.text h2 {
+  margin-top: 0.8em;
+  font-family: var(--font-serif);
+  font-size: 1.35em;
+  line-height: 1.25;
+  font-weight: 700;
+}
+
+.text blockquote {
+  padding-left: 1em;
+  border-left: 3px solid var(--reader-accent);
+  font-style: italic;
+  color: var(--reader-muted);
+}
+
+.end {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-5);
+  margin-top: var(--space-8);
+}
+
+.endMark {
+  font-size: 18px;
+  color: var(--reader-accent);
+}
+
+.endButton {
+  padding: 10px 20px;
+  border: 1px solid var(--reader-rule);
+  border-radius: 999px;
+  background: transparent;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--reader-text);
+  cursor: pointer;
+}
+
+.endButton:hover {
+  border-color: var(--reader-accent);
+}
+
+@media (max-width: 420px) {
+  .exitLabel {
+    display: none;
+  }
+
+  .exit {
+    padding: 0;
+    width: 36px;
+    justify-content: center;
+  }
+
+  .controls {
+    gap: 0;
+  }
+}
+
+@media (min-width: 768px) {
+  .page {
+    padding-top: var(--space-8);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .overlay {
+    animation: none;
+  }
+
+  .toolbar {
+    transition: none;
+  }
+}
