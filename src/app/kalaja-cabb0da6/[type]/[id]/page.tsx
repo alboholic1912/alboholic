@@ -1,20 +1,14 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/supabase/dal";
 import { getContentById } from "@/lib/content/data";
 import { updateContent, publishContent, unpublishContent, deleteContent } from "@/lib/content/actions";
 import { CONTENT_CONFIG, type FieldDef } from "@/lib/content/config";
 import { formatRecordLines } from "@/lib/content/records";
-import { isContentType, type ContentType, type SourceRecord } from "@/lib/content/types";
-import { getLatestImageJob, type ImageJob } from "@/lib/content/imageJobs";
-import { regenerateImage } from "@/lib/content/imageActions";
-import { IMAGE_MODE_LABELS } from "@/lib/ai/imagePrompts";
-import { getImageModel } from "@/lib/ai/models";
-import { mediaUrl } from "@/lib/supabase/storage";
+import { isContentType, type SourceRecord } from "@/lib/content/types";
+import { getLatestImageJob } from "@/lib/content/imageJobs";
 import BackLink from "@/components/BackLink/BackLink";
-import ImageJobRunner from "@/components/ImageJobRunner/ImageJobRunner";
-import ImagePromptFields from "@/components/ImagePromptFields/ImagePromptFields";
+import FeaturedImageSection from "@/components/FeaturedImage/FeaturedImageSection";
 import LocationPicker from "@/components/LocationPicker/LocationPicker";
 import SubmitButton from "@/components/SubmitButton/SubmitButton";
 import styles from "../../studio.module.css";
@@ -88,32 +82,22 @@ export default async function EditContentPage({
       )}
 
       {hasImage && (
-        <AiImageSection
+        <FeaturedImageSection
           type={type}
           id={id}
+          image={typeof record.image === "string" && record.image ? record.image : null}
           job={imageJob}
           error={typeof imageError === "string" ? imageError : undefined}
+          sectionClassName={styles.section}
+          sectionTitleClassName={styles.sectionTitle}
+          errorClassName={styles.error}
+          submitClassName={`${styles.button} ${styles.buttonPrimary}`}
         />
       )}
 
       <form action={updateContent} className={styles.form}>
         <input type="hidden" name="type" value={type} />
         <input type="hidden" name="id" value={id} />
-
-        {hasImage && (
-          <div className={styles.field}>
-            <label htmlFor="image">Featured image</label>
-            {typeof record.image === "string" && record.image ? (
-              <Image src={record.image} alt="" width={280} height={180} className={styles.thumb} unoptimized />
-            ) : (
-              <p className={styles.help}>No image uploaded yet.</p>
-            )}
-            <input id="image" type="file" name="image" accept="image/*" />
-            <span className={styles.help}>
-              Choose a file, then click &ldquo;Save changes&rdquo; below to upload it.
-            </span>
-          </div>
-        )}
 
         <div className={styles.field}>
           <label htmlFor="slug">Slug</label>
@@ -164,71 +148,6 @@ export default async function EditContentPage({
           </SubmitButton>
         </form>
       </div>
-    </div>
-  );
-}
-
-function AiImageSection({
-  type,
-  id,
-  job,
-  error,
-}: {
-  type: ContentType;
-  id: string;
-  job: ImageJob | null;
-  error?: string;
-}) {
-  const running = job?.status === "pending" || job?.status === "generating";
-  const failure = job?.status === "failed" ? job.error : null;
-
-  return (
-    <div className={styles.section} style={{ marginBottom: "var(--space-6)", maxWidth: 760 }}>
-      <div className={styles.sectionTitle}>AI image</div>
-
-      {error && <div className={styles.error}>{error}</div>}
-      {failure && <div className={styles.error}>Image generation failed: {failure}</div>}
-
-      {job && (
-        <div style={{ display: "flex", gap: "var(--space-4)", flexWrap: "wrap", alignItems: "flex-start" }}>
-          <div className={styles.field}>
-            <span className={styles.fieldLabel}>Reference</span>
-            <Image src={mediaUrl(job.reference_path)} alt="" width={160} height={120} className={styles.thumb} style={{ objectFit: "cover" }} unoptimized />
-          </div>
-          {job.status === "done" && job.image && (
-            <div className={styles.field}>
-              <span className={styles.fieldLabel}>Last result ({IMAGE_MODE_LABELS[job.mode]} · {getImageModel(job.model)?.label ?? job.model})</span>
-              <Image src={job.image} alt="" width={160} height={120} className={styles.thumb} style={{ objectFit: "cover" }} unoptimized />
-            </div>
-          )}
-        </div>
-      )}
-
-      {running && job ? (
-        <ImageJobRunner jobId={job.id} status={job.status as "pending" | "generating"} className={styles.help} />
-      ) : (
-        <form action={regenerateImage} className={styles.form} style={{ gap: "var(--space-4)" }}>
-          <input type="hidden" name="type" value={type} />
-          <input type="hidden" name="id" value={id} />
-          <ImagePromptFields
-            fieldClassName={styles.field}
-            helpClassName={styles.help}
-            defaultMode={job?.mode}
-            defaultPrompt={job?.prompt}
-            defaultModel={job?.model}
-            referenceHelp={
-              job
-                ? "Optional. Leave it empty to reuse the reference shown above."
-                : "PNG, JPEG or WebP. The result replaces the featured image."
-            }
-          />
-          <div className={styles.actions}>
-            <SubmitButton className={`${styles.button} ${styles.buttonPrimary}`} pendingText="Starting…">
-              {job ? "Regenerate image" : "Generate image"}
-            </SubmitButton>
-          </div>
-        </form>
-      )}
     </div>
   );
 }

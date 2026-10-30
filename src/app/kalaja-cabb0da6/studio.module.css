@@ -603,3 +603,49 @@
   padding: var(--space-2) var(--space-3);
   font-size: 0.85rem;
 }
+
+/* ---------- Loading skeleton ---------- */
+
+.skeleton {
+  border-radius: var(--radius-md);
+  background: linear-gradient(100deg, var(--color-bg-elev) 30%, var(--color-bg-elev-2) 50%, var(--color-bg-elev) 70%);
+  background-size: 300% 100%;
+  animation: skeletonPulse 1.4s ease-in-out infinite;
+}
+
+.skeletonTitle {
+  width: min(320px, 70%);
+  height: 38px;
+  margin-bottom: var(--space-6);
+}
+
+.skeletonGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+
+.skeletonCard {
+  height: 132px;
+}
+
+.skeletonRow {
+  height: 64px;
+  margin-bottom: var(--space-2);
+}
+
+@keyframes skeletonPulse {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: 0 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+  }
+}

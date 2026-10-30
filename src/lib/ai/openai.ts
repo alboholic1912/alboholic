@@ -18,7 +18,7 @@ function getClient() {
   return client;
 }
 
-const IMAGE_QUALITY = "high";
+const IMAGE_QUALITY = "high" as const;
 
 // Stories and battles show wide 3:2 frames; people are cropped to 4:5 cards and 4:3 headers, so square suits both.
 const IMAGE_SIZES: Record<ContentType, "1536x1024" | "1024x1024"> = {
@@ -36,7 +36,8 @@ export interface ReferenceImage {
   mimeType: string;
 }
 
-export async function generateImageFromReference({
+/** Edits the reference image when there is one, otherwise draws the image from the prompt alone. */
+export async function generateFeaturedImage({
   model,
   type,
   mode,
@@ -47,25 +48,30 @@ export async function generateImageFromReference({
   type: ContentType;
   mode: ImageMode;
   prompt: string;
-  reference: ReferenceImage;
+  reference: ReferenceImage | null;
 }): Promise<{ bytes: Buffer; mimeType: string; extension: string; usage: UsageInfo }> {
   if (!getImageModel(model)) {
     throw new Error("Unknown image model.");
   }
   const ai = getClient();
+  const common = {
+    model,
+    prompt,
+    size: IMAGE_SIZES[type],
+    quality: IMAGE_QUALITY,
+    output_format: "webp" as const,
+  };
 
   let response: OpenAI.ImagesResponse;
   try {
-    response = await ai.images.edit({
-      model,
-      image: await toFile(reference.bytes, reference.name, { type: reference.mimeType }),
-      prompt,
-      size: IMAGE_SIZES[type],
-      quality: IMAGE_QUALITY,
-      output_format: "webp",
-      // Restoration has to keep the real face; recreation is free to reinterpret it.
-      ...(mode === "restoration" && FIDELITY_MODELS.has(model) ? { input_fidelity: "high" as const } : {}),
-    });
+    response = reference
+      ? await ai.images.edit({
+          ...common,
+          image: await toFile(reference.bytes, reference.name, { type: reference.mimeType }),
+          // Restoration has to keep the real face; recreation is free to reinterpret it.
+          ...(mode === "restoration" && FIDELITY_MODELS.has(model) ? { input_fidelity: "high" as const } : {}),
+        })
+      : await ai.images.generate(common);
   } catch (err) {
     console.error("[openai] Generating image failed:", err);
     const detail =

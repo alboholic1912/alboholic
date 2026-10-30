@@ -1,11 +1,8 @@
-import { createClient } from "@/lib/supabase/server";
+import { getSessionUser } from "@/lib/supabase/dal";
 import StudioShell from "@/components/StudioShell/StudioShell";
 
 export default async function StudioLayout({ children }: LayoutProps<"/kalaja-cabb0da6">) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getSessionUser();
 
   return <StudioShell userEmail={user?.email ?? null}>{children}</StudioShell>;
 }

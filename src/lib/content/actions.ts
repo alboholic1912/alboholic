@@ -9,7 +9,13 @@ import { DEFAULT_AI_MODEL, getAiModel } from "@/lib/ai/models";
 import { logUsage } from "@/lib/ai/usage";
 import { locatePin } from "@/lib/geo/geocode";
 import { CONTENT_CONFIG, IMAGE_BRIEF_INSTRUCTION, withImageBrief } from "./config";
-import { createImageJob, readImageRequest } from "./imageJobs";
+import {
+  createImageJob,
+  readImageRequest,
+  readImageSource,
+  readImportImage,
+  RESTORATION_NEEDS_REFERENCE,
+} from "./imageJobs";
 import { cleanRecords, parseRecordLines } from "./records";
 import { isContentType, type ContentType } from "./types";
 import { slugify } from "./slug";
@@ -138,11 +144,14 @@ export async function generateContent(formData: FormData) {
       throw new Error("Add at least one source: text or a PDF.");
     }
 
-    // Checked before calling Claude, so a bad image field doesn't waste a generation.
-    // Without a reference image no image is made, so the prompt box is ignored.
-    const referenceField = formData.get("referenceImage");
-    const imageRequest =
-      referenceField instanceof File && referenceField.size > 0 ? readImageRequest(formData) : null;
+    // Checked before calling Claude, so a bad image field doesn't waste a generation. "Import" with
+    // no file means the image is added later.
+    const imageSource = readImageSource(formData);
+    const imageRequest = imageSource === "generate" ? readImageRequest(formData) : null;
+    const importImage = imageSource === "import" ? readImportImage(formData) : null;
+    if (imageRequest?.mode === "restoration" && !imageRequest.reference) {
+      throw new Error(RESTORATION_NEEDS_REFERENCE);
+    }
     const wantsImage = imageRequest !== null;
 
     const { blocks, record } = await buildSourceBlocks(sources);
@@ -202,11 +211,11 @@ export async function generateContent(formData: FormData) {
       throw new Error(`Could not save the generated ${config.label.toLowerCase()}: ${error.message}`);
     }
 
-    // The image itself is made by the edit page, in a request of its own. If it can't even be
-    // queued, the text is already saved, so say so there rather than losing the generation.
+    // An AI image is made by the edit page, in a request of its own. If the image step fails here,
+    // the text is already saved, so say so there rather than losing the generation.
     let imageError = "";
-    if (imageRequest?.reference) {
-      try {
+    try {
+      if (imageRequest) {
         await createImageJob({
           type,
           id: data.id,
@@ -216,10 +225,14 @@ export async function generateContent(formData: FormData) {
           brief: imageBrief,
           reference: imageRequest.reference,
         });
-      } catch (err) {
-        console.error(`[generateContent] type=${type} could not queue the image:`, err);
-        imageError = err instanceof Error ? err.message : "Could not queue the image.";
+      } else if (importImage) {
+        const image = await uploadImage(importImage, `${type}/${data.id}`);
+        const { error: imageSaveError } = await supabase.from(type).update({ image }).eq("id", data.id);
+        if (imageSaveError) throw new Error(`Could not save the image: ${imageSaveError.message}`);
       }
+    } catch (err) {
+      console.error(`[generateContent] type=${type} could not add the image:`, err);
+      imageError = err instanceof Error ? err.message : "Could not add the image.";
     }
 
     redirect(`${ADMIN_PATH}/${type}/${data.id}${imageError ? `?imageError=${encodeURIComponent(imageError)}` : ""}`);
@@ -270,11 +283,6 @@ export async function updateContent(formData: FormData) {
 
   if (type === "stories" && Array.isArray(update.body)) {
     update.read_time = estimateReadTime(update.body as string[]);
-  }
-
-  const image = formData.get("image");
-  if (image instanceof File && image.size > 0) {
-    update.image = await uploadImage(image, `${type}/${id}`);
   }
 
   const { error } = await supabase.from(type).update(update).eq("id", id);

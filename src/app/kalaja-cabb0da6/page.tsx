@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import type { JSX } from "react";
 import Link from "next/link";
 import { requireUser } from "@/lib/supabase/dal";
-import { countsByStatus, listContent } from "@/lib/content/data";
+import { countsByStatus, listContentSummaries } from "@/lib/content/data";
 import { CONTENT_CONFIG } from "@/lib/content/config";
 import { CONTENT_TYPES, type ContentType } from "@/lib/content/types";
 import { getAnyModel } from "@/lib/ai/models";
@@ -24,18 +24,18 @@ const TYPE_ICONS: Record<ContentType, () => JSX.Element> = {
 
 export default async function StudioPage() {
   await requireUser();
-  const [counts, usage, ideaCounts] = await Promise.all([
+  // Everything in one round: the panels don't depend on each other.
+  const [counts, usage, ideaCounts, reviewQueues] = await Promise.all([
     countsByStatus(),
     getUsageSummary(),
     countIdeas(),
+    Promise.all(
+      CONTENT_TYPES.map(async (type) => ({
+        type,
+        items: await listContentSummaries(type, { status: "review", limit: 5 }),
+      }))
+    ),
   ]);
-
-  const reviewQueues = await Promise.all(
-    CONTENT_TYPES.map(async (type) => ({
-      type,
-      items: (await listContent(type, "review")).slice(0, 5),
-    }))
-  );
   const pendingReview = reviewQueues.flatMap((q) =>
     q.items.map((item) => ({ type: q.type, item }))
   );
@@ -131,9 +131,6 @@ export default async function StudioPage() {
               {pendingReview.map(({ type, item }) => {
                 const config = CONTENT_CONFIG[type];
                 const Icon = TYPE_ICONS[type];
-                const title = String(
-                  (item as unknown as Record<string, unknown>)[config.titleField] ?? "Untitled"
-                );
                 return (
                   <Link
                     key={`${type}-${item.id}`}
@@ -145,7 +142,7 @@ export default async function StudioPage() {
                         <Icon />
                       </span>
                       <div>
-                        <div className={styles.listRowTitle}>{title}</div>
+                        <div className={styles.listRowTitle}>{item.title}</div>
                         <div className={styles.listRowMeta}>{config.label}</div>
                       </div>
                     </div>

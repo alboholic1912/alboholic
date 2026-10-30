@@ -1,0 +1,449 @@
+/* ---------- Layout ---------- */
+
+.fields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+/* `hidden` would otherwise lose to the display rule above. */
+.panel[hidden] {
+  display: none;
+}
+
+/* A lone drop zone (Import) at full width would be taller than the screen. */
+.panel > .dropField {
+  max-width: 480px;
+}
+
+.generateGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--space-5);
+  align-items: start;
+}
+
+.optionsColumn {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+@media (max-width: 680px) {
+  .generateGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.field,
+.dropField {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.fieldHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.fieldLabel {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.tag {
+  font-family: var(--mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-dim);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  padding: 1px 8px;
+}
+
+.help {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: var(--color-text-dim);
+}
+
+.warning {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #e9b44c;
+}
+
+.linkButton {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--color-text-dim);
+  font-size: 0.8rem;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.linkButton:hover {
+  color: var(--color-text);
+}
+
+.visuallyHidden,
+.fileInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  border: 0;
+}
+
+/* ---------- Generate / Import switch ---------- */
+
+.sourceSwitch {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+  padding: var(--space-1);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.sourceOption {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border: 1px solid transparent;
+  border-radius: calc(var(--radius-md) - 4px);
+  background: transparent;
+  color: var(--color-text-muted);
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.sourceOption:hover {
+  color: var(--color-text);
+  background: var(--color-bg-elev-2);
+}
+
+.sourceOption:focus-visible {
+  outline: 2px solid var(--reagent);
+  outline-offset: 2px;
+}
+
+.sourceActive,
+.sourceActive:hover {
+  color: var(--color-text);
+  background: color-mix(in srgb, var(--reagent) 14%, var(--color-bg-elev-2));
+  border-color: color-mix(in srgb, var(--reagent) 55%, transparent);
+}
+
+.sourceIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-elev-2);
+  color: var(--color-text-dim);
+}
+
+.sourceActive .sourceIcon {
+  background: var(--reagent);
+  color: #fff;
+}
+
+.sourceText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.sourceLabel {
+  font-weight: 600;
+  font-size: 0.92rem;
+}
+
+.sourceCaption {
+  font-size: 0.76rem;
+  color: var(--color-text-dim);
+}
+
+@media (max-width: 480px) {
+  .sourceCaption {
+    display: none;
+  }
+}
+
+/* ---------- Recreation / Restoration ---------- */
+
+.modeSwitch {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  padding: 3px;
+  gap: 3px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-bg);
+}
+
+.modeOption {
+  position: relative;
+  padding: var(--space-2) var(--space-3);
+  border-radius: 999px;
+  text-align: center;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.modeOption:hover {
+  color: var(--color-text);
+}
+
+.modeOption:has(input:focus-visible) {
+  outline: 2px solid var(--reagent);
+  outline-offset: 2px;
+}
+
+.modeActive,
+.modeActive:hover {
+  background: var(--reagent);
+  color: #fff;
+}
+
+/* ---------- Inputs ---------- */
+
+.select,
+.textarea {
+  width: 100%;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3) var(--space-4);
+  color: var(--color-text);
+  font-family: inherit;
+  font-size: 0.95rem;
+  transition: border-color 0.15s ease;
+}
+
+.textarea {
+  resize: vertical;
+  line-height: 1.55;
+}
+
+.select:hover,
+.textarea:hover {
+  border-color: var(--color-text-dim);
+}
+
+.select:focus,
+.textarea:focus {
+  outline: 2px solid var(--reagent);
+  outline-offset: 1px;
+}
+
+/* ---------- Dropzone ---------- */
+
+.dropzone {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  overflow: hidden;
+  border: 1.5px dashed var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+  color: var(--color-text-dim);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.dropzone:hover,
+.dropActive {
+  border-color: var(--reagent);
+  background: color-mix(in srgb, var(--reagent) 6%, var(--color-bg));
+}
+
+.dropzone:has(.fileInput:focus-visible) {
+  outline: 2px solid var(--reagent);
+  outline-offset: 2px;
+}
+
+.dropFilled {
+  border-style: solid;
+}
+
+.dropWide {
+  aspect-ratio: 3 / 2;
+}
+
+.dropSquare {
+  aspect-ratio: 1 / 1;
+  max-width: 360px;
+}
+
+.dropImage {
+  object-fit: cover;
+}
+
+.dropEmpty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+}
+
+.dropEmpty svg {
+  color: var(--color-text-dim);
+}
+
+.dropHint {
+  font-size: 0.76rem;
+  color: var(--color-text-dim);
+}
+
+.dropMeta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+.dropName {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---------- Edit page: current image and running state ---------- */
+
+.stage {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+}
+
+.stageEmpty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-dim);
+  font-size: 0.9rem;
+  border-style: dashed;
+}
+
+.stageRunning {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(
+      100deg,
+      transparent 20%,
+      color-mix(in srgb, var(--reagent) 10%, transparent) 50%,
+      transparent 80%
+    ),
+    var(--color-bg);
+  background-size: 250% 100%, auto;
+  animation: shimmer 2.2s linear infinite;
+}
+
+@keyframes shimmer {
+  from {
+    background-position: 150% 0, 0 0;
+  }
+  to {
+    background-position: -100% 0, 0 0;
+  }
+}
+
+.stageInner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  text-align: center;
+}
+
+.stageTitle {
+  font-weight: 600;
+}
+
+.stageMeta {
+  font-family: var(--mono);
+  font-size: 0.74rem;
+  color: var(--color-text-muted);
+}
+
+.stageHint {
+  font-size: 0.8rem;
+  color: var(--color-text-dim);
+}
+
+.spinner {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 2.5px solid color-mix(in srgb, var(--reagent) 25%, transparent);
+  border-top-color: var(--reagent);
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stageRunning,
+  .spinner {
+    animation: none;
+  }
+}
+
+.submitRow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border-soft);
+}

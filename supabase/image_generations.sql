@@ -22,6 +22,10 @@ create table if not exists public.image_generations (
 alter table public.image_generations
   add column if not exists model text not null default 'gpt-image-2';
 
+-- A reference image is optional: without one the image is drawn from the prompt alone.
+alter table public.image_generations
+  alter column reference_path drop not null;
+
 create index if not exists image_generations_content_idx
   on public.image_generations (content_type, content_id, created_at desc);
 

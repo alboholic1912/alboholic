@@ -7,7 +7,7 @@ import { AI_MODELS, DEFAULT_AI_MODEL } from "@/lib/ai/models";
 import { isContentType } from "@/lib/content/types";
 import BackLink from "@/components/BackLink/BackLink";
 import SubmitButton from "@/components/SubmitButton/SubmitButton";
-import ImagePromptFields from "@/components/ImagePromptFields/ImagePromptFields";
+import FeaturedImageFields from "@/components/FeaturedImage/FeaturedImageFields";
 import styles from "../../studio.module.css";
 
 // Claude generation (especially Sonnet with large PDFs) can run close to
@@ -72,19 +72,11 @@ export default async function NewContentPage({
 
         <div className={styles.section}>
           <div className={styles.sectionTitle}>Featured image</div>
-          <p className={styles.help}>
-            Optional. Attach a real image and OpenAI will make the featured image from it, your prompt, and a scene
-            description Claude writes from the sources. It starts on the next page once the text is ready.
-          </p>
-          <ImagePromptFields
-            fieldClassName={styles.field}
-            helpClassName={styles.help}
-            referenceHelp="PNG, JPEG or WebP. Leave it empty to upload an image yourself later."
-          />
+          <FeaturedImageFields context="new" shape={type === "people" ? "square" : "wide"} />
         </div>
 
         <div className={styles.section}>
-          <div className={styles.sectionTitle}>AI model</div>
+          <div className={styles.sectionTitle}>Writing model</div>
           <div className={styles.field}>
             <label htmlFor="model">Generate with</label>
             <select id="model" name="model" defaultValue={DEFAULT_AI_MODEL}>

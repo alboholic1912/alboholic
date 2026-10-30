@@ -3,11 +3,19 @@
 import { redirect, unstable_rethrow } from "next/navigation";
 import { requireUser } from "@/lib/supabase/dal";
 import { createClient } from "@/lib/supabase/server";
-import { downloadMedia, uploadMedia } from "@/lib/supabase/storage";
-import { generateImageFromReference } from "@/lib/ai/openai";
+import { downloadMedia, uploadImage, uploadMedia } from "@/lib/supabase/storage";
+import { generateFeaturedImage, type ReferenceImage } from "@/lib/ai/openai";
 import { logUsage } from "@/lib/ai/usage";
 import { CONTENT_CONFIG } from "./config";
-import { buildImagePrompt, createImageJob, getLatestImageJob, readImageRequest, type ImageJob } from "./imageJobs";
+import {
+  buildImagePrompt,
+  createImageJob,
+  getLatestImageJob,
+  readImageRequest,
+  readImageSource,
+  readImportImage,
+  type ImageJob,
+} from "./imageJobs";
 import { isContentType } from "./types";
 
 const ADMIN_PATH = "/kalaja-cabb0da6";
@@ -46,17 +54,22 @@ export async function runImageGeneration(jobId: string): Promise<{ ok: boolean; 
     if (!item) throw new Error(`The ${config.label.toLowerCase()} no longer exists.`);
     const title = String((item as unknown as Record<string, unknown>)[config.titleField] ?? "");
 
-    const referenceBlob = await downloadMedia(job.reference_path);
-    const { bytes, mimeType, extension, usage } = await generateImageFromReference({
+    let reference: ReferenceImage | null = null;
+    if (job.reference_path) {
+      const blob = await downloadMedia(job.reference_path);
+      reference = {
+        bytes: Buffer.from(await blob.arrayBuffer()),
+        name: job.reference_path.split("/").pop() ?? "reference.png",
+        mimeType: blob.type || "image/png",
+      };
+    }
+
+    const { bytes, mimeType, extension, usage } = await generateFeaturedImage({
       model: job.model,
       type,
       mode: job.mode,
       prompt: buildImagePrompt(job, config.label, title),
-      reference: {
-        bytes: Buffer.from(await referenceBlob.arrayBuffer()),
-        name: job.reference_path.split("/").pop() ?? "reference.png",
-        mimeType: referenceBlob.type || "image/png",
-      },
+      reference,
     });
     await logUsage(`${type}-image`, usage);
 
@@ -83,8 +96,11 @@ export async function runImageGeneration(jobId: string): Promise<{ ok: boolean; 
   }
 }
 
-/** Queues a new image for an existing item, reusing the last reference image unless a new one is attached. */
-export async function regenerateImage(formData: FormData) {
+/**
+ * The featured-image form on the edit page: either queues an AI image (reusing the last
+ * reference unless a new one is attached or the editor unticks it), or uploads an image as it is.
+ */
+export async function saveFeaturedImage(formData: FormData) {
   await requireUser();
   const type = formData.get("type");
   const id = formData.get("id");
@@ -94,17 +110,26 @@ export async function regenerateImage(formData: FormData) {
 
   const editPath = `${ADMIN_PATH}/${type}/${id}`;
   try {
-    const { mode, model, prompt, reference } = readImageRequest(formData);
-    const previous = await getLatestImageJob(type, id);
-    const source = reference ?? (previous ? { path: previous.reference_path } : null);
-    if (!source) {
-      throw new Error("Attach a reference image first.");
+    if (readImageSource(formData) === "import") {
+      const file = readImportImage(formData);
+      if (!file) throw new Error("Choose an image to import.");
+      const supabase = await createClient();
+      const image = await uploadImage(file, `${type}/${id}`);
+      const { error } = await supabase
+        .from(type)
+        .update({ image, updated_at: new Date().toISOString() })
+        .eq("id", id);
+      if (error) throw new Error(`Could not save the image: ${error.message}`);
+    } else {
+      const { mode, model, prompt, reference, reuseReference } = readImageRequest(formData);
+      const previous = await getLatestImageJob(type, id);
+      const previousPath = reuseReference ? previous?.reference_path : null;
+      const source = reference ?? (previousPath ? { path: previousPath } : null);
+      await createImageJob({ type, id, mode, model, prompt, brief: previous?.brief ?? "", reference: source });
     }
-
-    await createImageJob({ type, id, mode, model, prompt, brief: previous?.brief ?? "", reference: source });
   } catch (err) {
     unstable_rethrow(err);
-    const message = err instanceof Error ? err.message : "Could not start the image.";
+    const message = err instanceof Error ? err.message : "Could not save the image.";
     redirect(`${editPath}?imageError=${encodeURIComponent(message)}`);
   }
   redirect(editPath);
