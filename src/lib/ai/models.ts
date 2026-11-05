@@ -31,10 +31,10 @@ export function getAiModel(id: string): AiModel | undefined {
 }
 
 /**
- * OpenAI image models for featured images. Prices are OpenAI's per-1M-token rates; input uses the
- * image-input rate, since the reference image is nearly all of it (the prompt is a few hundred tokens).
+ * OpenAI image models the Studio used to make featured images with. No longer used; kept only so
+ * past image generations in the usage log still show their name and cost.
  */
-export const IMAGE_MODELS: AiModel[] = [
+const PAST_IMAGE_MODELS: AiModel[] = [
   {
     id: "gpt-image-2",
     label: "GPT Image 2",
@@ -72,15 +72,9 @@ export const IMAGE_MODELS: AiModel[] = [
   },
 ];
 
-export const DEFAULT_IMAGE_MODEL = IMAGE_MODELS[0].id;
-
-export function getImageModel(id: string): AiModel | undefined {
-  return IMAGE_MODELS.find((m) => m.id === id);
-}
-
-/** Any model the usage log may name, Claude or OpenAI. */
+/** Any model the usage log may name, Claude or (past) OpenAI. */
 export function getAnyModel(id: string): AiModel | undefined {
-  return getAiModel(id) ?? getImageModel(id);
+  return getAiModel(id) ?? PAST_IMAGE_MODELS.find((m) => m.id === id);
 }
 
 export function estimateCostUsd(modelId: string, inputTokens: number, outputTokens: number): number {

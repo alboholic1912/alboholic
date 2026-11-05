@@ -7,20 +7,15 @@ import styles from "./FeaturedImage.module.css";
 type Props = {
   name: string;
   label: string;
-  /** Shown as a small tag beside the label. */
-  tag?: string;
   emptyText: string;
   help?: string;
   accept: string;
   /** "wide" for 3:2 story and battle images, "square" for portraits. */
   shape: "wide" | "square";
-  /** An image already on file, shown until a new one is chosen. */
-  existing?: { url: string; caption: string; onRemove?: () => void } | null;
-  onFileChange?: (hasFile: boolean) => void;
 };
 
 /** A file input you can click or drop onto, with a preview of the chosen image. */
-export default function Dropzone({ name, label, tag, emptyText, help, accept, shape, existing, onFileChange }: Props) {
+export default function Dropzone({ name, label, emptyText, help, accept, shape }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<{ url: string; name: string } | null>(null);
   const [dragging, setDragging] = useState(false);
@@ -32,7 +27,6 @@ export default function Dropzone({ name, label, tag, emptyText, help, accept, sh
 
   function showFile(file: File | undefined) {
     setPreview(file ? { url: URL.createObjectURL(file), name: file.name } : null);
-    onFileChange?.(Boolean(file));
   }
 
   function clear() {
@@ -51,7 +45,7 @@ export default function Dropzone({ name, label, tag, emptyText, help, accept, sh
     showFile(file);
   }
 
-  const shown = preview ?? (existing ? { url: existing.url, name: existing.caption } : null);
+  const shown = preview;
   const inputId = `dropzone-${name}`;
 
   return (
@@ -60,7 +54,6 @@ export default function Dropzone({ name, label, tag, emptyText, help, accept, sh
         <label htmlFor={inputId} className={styles.fieldLabel}>
           {label}
         </label>
-        {tag && <span className={styles.tag}>{tag}</span>}
       </div>
 
       <label
@@ -100,17 +93,9 @@ export default function Dropzone({ name, label, tag, emptyText, help, accept, sh
           <span className={styles.dropName} title={shown.name}>
             {shown.name}
           </span>
-          {preview ? (
-            <button type="button" className={styles.linkButton} onClick={clear}>
-              Remove
-            </button>
-          ) : (
-            existing?.onRemove && (
-              <button type="button" className={styles.linkButton} onClick={existing.onRemove}>
-                Don&apos;t use
-              </button>
-            )
-          )}
+          <button type="button" className={styles.linkButton} onClick={clear}>
+            Remove
+          </button>
         </div>
       )}
       {help && <p className={styles.help}>{help}</p>}

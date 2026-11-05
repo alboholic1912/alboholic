@@ -8,14 +8,8 @@ import { buildSourceBlocks, generateStructuredContent, type SourceInput } from "
 import { DEFAULT_AI_MODEL, getAiModel } from "@/lib/ai/models";
 import { logUsage } from "@/lib/ai/usage";
 import { locatePin } from "@/lib/geo/geocode";
-import { CONTENT_CONFIG, IMAGE_BRIEF_INSTRUCTION, withImageBrief } from "./config";
-import {
-  createImageJob,
-  readImageRequest,
-  readImageSource,
-  readImportImage,
-  RESTORATION_NEEDS_REFERENCE,
-} from "./imageJobs";
+import { CONTENT_CONFIG } from "./config";
+import { readFeaturedImage } from "./featuredImage";
 import { cleanRecords, parseRecordLines } from "./records";
 import { isContentType, type ContentType } from "./types";
 import { slugify } from "./slug";
@@ -144,15 +138,9 @@ export async function generateContent(formData: FormData) {
       throw new Error("Add at least one source: text or a PDF.");
     }
 
-    // Checked before calling Claude, so a bad image field doesn't waste a generation. "Import" with
-    // no file means the image is added later.
-    const imageSource = readImageSource(formData);
-    const imageRequest = imageSource === "generate" ? readImageRequest(formData) : null;
-    const importImage = imageSource === "import" ? readImportImage(formData) : null;
-    if (imageRequest?.mode === "restoration" && !imageRequest.reference) {
-      throw new Error(RESTORATION_NEEDS_REFERENCE);
-    }
-    const wantsImage = imageRequest !== null;
+    // Checked before calling Claude, so a bad image doesn't waste a generation. No file means
+    // the image is added later.
+    const featuredImage = readFeaturedImage(formData);
 
     const { blocks, record } = await buildSourceBlocks(sources);
     const links = await linkingContext(type);
@@ -160,15 +148,11 @@ export async function generateContent(formData: FormData) {
     const { data: generated, usage } = await generateStructuredContent<Record<string, unknown>>({
       model,
       system: config.aiSystem,
-      typeInstruction:
-        config.aiInstruction + (wantsImage ? IMAGE_BRIEF_INSTRUCTION : "") + (links?.instruction ?? ""),
+      typeInstruction: config.aiInstruction + (links?.instruction ?? ""),
       sourceBlocks: blocks,
-      jsonSchema: wantsImage ? withImageBrief(config.aiSchema) : config.aiSchema,
+      jsonSchema: config.aiSchema,
     });
     await logUsage(type, usage);
-
-    const imageBrief = String(generated.imageBrief ?? "");
-    delete generated.imageBrief;
 
     const row: Record<string, unknown> = { ...config.defaults, sources: record, status: "review" };
 
@@ -211,22 +195,12 @@ export async function generateContent(formData: FormData) {
       throw new Error(`Could not save the generated ${config.label.toLowerCase()}: ${error.message}`);
     }
 
-    // An AI image is made by the edit page, in a request of its own. If the image step fails here,
-    // the text is already saved, so say so there rather than losing the generation.
+    // If the upload fails, the text is already saved, so say so on the edit page rather than
+    // losing the generation.
     let imageError = "";
     try {
-      if (imageRequest) {
-        await createImageJob({
-          type,
-          id: data.id,
-          mode: imageRequest.mode,
-          model: imageRequest.model,
-          prompt: imageRequest.prompt,
-          brief: imageBrief,
-          reference: imageRequest.reference,
-        });
-      } else if (importImage) {
-        const image = await uploadImage(importImage, `${type}/${data.id}`);
+      if (featuredImage) {
+        const image = await uploadImage(featuredImage, `${type}/${data.id}`);
         const { error: imageSaveError } = await supabase.from(type).update({ image }).eq("id", data.id);
         if (imageSaveError) throw new Error(`Could not save the image: ${imageSaveError.message}`);
       }
