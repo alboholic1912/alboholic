@@ -8,7 +8,7 @@ import {
   type ImageTone,
 } from "./types";
 
-// JSON Schema objects sent to Claude as the structured-output format.
+// JSON Schema objects sent to the AI (Claude or OpenAI) as the structured-output format.
 type JsonSchema = Record<string, unknown>;
 
 const IMAGE_TONES: ImageTone[] = ["crimson", "amber", "stone", "slate"];
@@ -139,7 +139,6 @@ function recordsHelp(columns: RecordColumn[], example: string): string {
   return `One per line: ${format}. For example: ${example}`;
 }
 
-/** Appended to the instruction when the editor asks for an AI image, so Claude also describes the scene. */
 export const CONTENT_CONFIG: Record<ContentType, ContentTypeConfig> = {
   stories: {
     type: "stories",

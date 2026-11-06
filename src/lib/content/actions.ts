@@ -4,7 +4,8 @@ import { redirect, unstable_rethrow } from "next/navigation";
 import { requireUser } from "@/lib/supabase/dal";
 import { createClient } from "@/lib/supabase/server";
 import { uploadImage } from "@/lib/supabase/storage";
-import { buildSourceBlocks, generateStructuredContent, type SourceInput } from "@/lib/ai/anthropic";
+import { generateStructuredContent } from "@/lib/ai/generate";
+import { buildSourceParts, type SourceInput } from "@/lib/ai/sources";
 import { DEFAULT_AI_MODEL, getAiModel } from "@/lib/ai/models";
 import { logUsage } from "@/lib/ai/usage";
 import { locatePin } from "@/lib/geo/geocode";
@@ -142,14 +143,14 @@ export async function generateContent(formData: FormData) {
     // the image is added later.
     const featuredImage = readFeaturedImage(formData);
 
-    const { blocks, record } = await buildSourceBlocks(sources);
+    const { parts, record } = await buildSourceParts(sources);
     const links = await linkingContext(type);
 
     const { data: generated, usage } = await generateStructuredContent<Record<string, unknown>>({
       model,
       system: config.aiSystem,
       typeInstruction: config.aiInstruction + (links?.instruction ?? ""),
-      sourceBlocks: blocks,
+      parts,
       jsonSchema: config.aiSchema,
     });
     await logUsage(type, usage);

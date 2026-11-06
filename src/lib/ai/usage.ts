@@ -1,7 +1,7 @@
 import "server-only";
 import { createClient } from "@/lib/supabase/server";
 import { estimateCostUsd } from "./models";
-import type { UsageInfo } from "./anthropic";
+import type { UsageInfo } from "./generate";
 
 // Logging must never break content generation: the tokens were already spent,
 // so a failure here (e.g. the ai_usage table not created yet) is only logged.

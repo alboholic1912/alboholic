@@ -1,7 +1,6 @@
 import "server-only";
 import Anthropic from "@anthropic-ai/sdk";
-import type { SourceRecord } from "@/lib/content/types";
-import { getAiModel } from "./models";
+import { MAX_OUTPUT_TOKENS, type GenerateRequest, type UsageInfo } from "./generate";
 
 let client: Anthropic | null = null;
 
@@ -16,86 +15,23 @@ function getClient() {
   return client;
 }
 
-export type SourceInput =
-  | { kind: "text"; label: string; value: string }
-  | { kind: "file"; file: File };
-
-export interface UsageInfo {
-  model: string;
-  inputTokens: number;
-  outputTokens: number;
-  cacheReadTokens: number;
-  cacheWriteTokens: number;
-}
-
-const MAX_OUTPUT_TOKENS = 8192;
-
-export async function buildSourceBlocks(
-  sources: SourceInput[]
-): Promise<{ blocks: Anthropic.ContentBlockParam[]; record: SourceRecord[] }> {
-  const blocks: Anthropic.ContentBlockParam[] = [];
-  const record: SourceRecord[] = [];
-
-  for (const source of sources) {
-    if (source.kind === "text") {
-      blocks.push({ type: "text", text: `--- Source: ${source.label} ---\n${source.value}` });
-      record.push({ kind: "text", label: source.label, preview: source.value.slice(0, 200) });
-      continue;
-    }
-
-    const { file } = source;
-    const isPdf = file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
-    if (isPdf) {
-      const data = Buffer.from(await file.arrayBuffer()).toString("base64");
-      blocks.push({
-        type: "document",
-        title: file.name,
-        source: { type: "base64", media_type: "application/pdf", data },
-      });
-      record.push({ kind: "file", name: file.name, mimeType: "application/pdf" });
-    } else {
-      const text = await file.text();
-      blocks.push({ type: "text", text: `--- Source: ${file.name} ---\n${text}` });
-      record.push({ kind: "file", name: file.name, mimeType: file.type || "text/plain" });
-    }
-  }
-
-  return { blocks, record };
-}
-
-const GROUNDING_INSTRUCTION =
-  "You are a careful research assistant preparing historical content for Alboholic, a site about Albanian history. " +
-  "You must use ONLY the information present in the provided sources (text and documents). " +
-  "Do not invent, assume, or add any fact, name, date, quote, or detail that is not directly supported by the sources. " +
-  "If the sources do not contain enough information for a field, leave that field as an empty string rather than guessing or fabricating. " +
-  "Do not use any outside knowledge you may have, even if you believe it to be true — ground every statement strictly in the given sources. " +
-  "Write in clear, engaging, neutral prose suitable for a general audience.";
-
-export async function generateStructuredContent<T>({
+/** Returns Claude's JSON text; generate.ts parses it. */
+export async function generateWithClaude({
   model,
-  system = GROUNDING_INSTRUCTION,
+  system,
   typeInstruction,
-  sourceBlocks,
+  parts,
   jsonSchema,
-}: {
-  model: string;
-  system?: string;
-  typeInstruction: string;
-  sourceBlocks: Anthropic.ContentBlockParam[];
-  jsonSchema: Record<string, unknown>;
-}): Promise<{ data: T; usage: UsageInfo }> {
-  if (sourceBlocks.length === 0) {
-    throw new Error("At least one source (text or PDF) is required.");
-  }
-  if (!getAiModel(model)) {
-    throw new Error("Unknown AI model.");
-  }
-
-  const ai = getClient();
+}: GenerateRequest): Promise<{ text: string; usage: UsageInfo }> {
+  const sourceBlocks: Anthropic.ContentBlockParam[] = parts.map((part) =>
+    part.kind === "pdf"
+      ? { type: "document", title: part.name, source: { type: "base64", media_type: "application/pdf", data: part.data } }
+      : { type: "text", text: part.text }
+  );
 
   let response: Anthropic.Message;
   try {
-    response = await ai.messages.create({
+    response = await getClient().messages.create({
       model,
       max_tokens: MAX_OUTPUT_TOKENS,
       system,
@@ -139,11 +75,5 @@ export async function generateStructuredContent<T>({
     console.error("[anthropic] Empty response.", { stopReason: response.stop_reason });
     throw new Error("Claude returned an empty response.");
   }
-
-  try {
-    return { data: JSON.parse(textBlock.text) as T, usage };
-  } catch (err) {
-    console.error("[anthropic] Malformed JSON response:", textBlock.text.slice(0, 2000), err);
-    throw new Error("Claude returned malformed JSON.");
-  }
+  return { text: textBlock.text, usage };
 }

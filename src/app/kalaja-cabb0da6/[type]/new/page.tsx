@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/supabase/dal";
 import { generateContent } from "@/lib/content/actions";
 import { CONTENT_CONFIG } from "@/lib/content/config";
-import { AI_MODELS, DEFAULT_AI_MODEL } from "@/lib/ai/models";
+import { AI_MODELS, AI_PROVIDER_LABELS, DEFAULT_AI_MODEL, type AiProvider } from "@/lib/ai/models";
 import { isContentType } from "@/lib/content/types";
 import BackLink from "@/components/BackLink/BackLink";
 import SubmitButton from "@/components/SubmitButton/SubmitButton";
@@ -80,10 +80,14 @@ export default async function NewContentPage({
           <div className={styles.field}>
             <label htmlFor="model">Generate with</label>
             <select id="model" name="model" defaultValue={DEFAULT_AI_MODEL}>
-              {AI_MODELS.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.label} — {m.description}
-                </option>
+              {(Object.keys(AI_PROVIDER_LABELS) as AiProvider[]).map((provider) => (
+                <optgroup key={provider} label={AI_PROVIDER_LABELS[provider]}>
+                  {AI_MODELS.filter((m) => m.provider === provider).map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.label} — {m.description}
+                    </option>
+                  ))}
+                </optgroup>
               ))}
             </select>
           </div>
