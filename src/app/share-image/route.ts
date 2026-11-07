@@ -11,7 +11,13 @@ const MEDIA_ORIGIN = new URL(process.env.NEXT_PUBLIC_SUPABASE_URL!).origin;
 const MEDIA_PATH = "/storage/v1/object/public/media/";
 
 export async function GET(request: NextRequest) {
-  const src = request.nextUrl.searchParams.get("src");
+  const params = request.nextUrl.searchParams;
+  // Only the exact link the site hands out. Extra parameters would skip the cache and make
+  // the server shrink the same image again on every request.
+  if ([...params.keys()].some((key) => key !== "src") || params.getAll("src").length !== 1) {
+    return new Response("Bad image address", { status: 400 });
+  }
+  const src = params.get("src");
 
   let url: URL;
   try {

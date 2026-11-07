@@ -8,6 +8,8 @@ const DONE: SubscribeState = { status: "done" };
 
 // Postgres' "unique violation": the address is already on the list.
 const ALREADY_SUBSCRIBED = "23505";
+// Raised by the throttle_subscribers trigger (supabase/schema.sql) during a signup flood.
+const TOO_MANY_SIGNUPS = "TH429";
 
 export async function subscribe(_previous: SubscribeState, formData: FormData): Promise<SubscribeState> {
   // A field people never see. Only a bot fills it in, and it is told all went well.
@@ -19,6 +21,9 @@ export async function subscribe(_previous: SubscribeState, formData: FormData): 
   }
 
   const { error } = await createPublicClient().from("subscribers").insert({ email });
+  if (error?.code === TOO_MANY_SIGNUPS) {
+    return { status: "error", message: "We're getting a lot of signups right now. Please try again in a few minutes." };
+  }
   if (error && error.code !== ALREADY_SUBSCRIBED) {
     console.error("[subscribe] Could not save the address. Has supabase/schema.sql been run?", error.message);
     return { status: "error", message: "We couldn't sign you up just now. Please try again in a moment." };

@@ -238,6 +238,30 @@ drop policy if exists "Admin delete subscribers" on subscribers;
 create policy "Admin delete subscribers" on subscribers
   for delete using (public.is_admin());
 
+-- Flood protection: at most 20 new addresses in any 10 minutes, site-wide.
+create index if not exists subscribers_created_at_idx on public.subscribers (created_at);
+
+create or replace function public.throttle_subscribers()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if (select count(*) from public.subscribers where created_at > now() - interval '10 minutes') >= 20 then
+    raise exception 'Too many signups right now' using errcode = 'TH429';
+  end if;
+  return new;
+end;
+$$;
+
+revoke all on function public.throttle_subscribers() from public;
+
+drop trigger if exists throttle_subscribers on public.subscribers;
+create trigger throttle_subscribers
+  before insert on public.subscribers
+  for each row execute function public.throttle_subscribers();
+
 -- ---------------------------------------------------------------------------
 -- Storage bucket for uploaded images (featured images, person portraits, etc).
 -- ---------------------------------------------------------------------------
@@ -246,9 +270,9 @@ insert into storage.buckets (id, name, public)
 values ('media', 'media', true)
 on conflict (id) do nothing;
 
+-- No public select policy: the bucket is public, so images load by their address anyway, and a
+-- select policy would let anyone list every file name, including images for unpublished drafts.
 drop policy if exists "Public read media" on storage.objects;
-create policy "Public read media" on storage.objects
-  for select using (bucket_id = 'media');
 
 drop policy if exists "Admin write media" on storage.objects;
 create policy "Admin write media" on storage.objects
