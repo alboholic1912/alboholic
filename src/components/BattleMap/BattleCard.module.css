@@ -80,6 +80,12 @@
   color: var(--color-accent-bright);
 }
 
+.share {
+  align-self: flex-start;
+  background: rgba(5, 3, 3, 0.55);
+  backdrop-filter: blur(6px);
+}
+
 .summary {
   position: relative;
   font-size: 15px;

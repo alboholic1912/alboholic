@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import ImagePlaceholder from "@/components/ImagePlaceholder/ImagePlaceholder";
 import ReadingMode from "@/components/ReadingMode/ReadingMode";
+import ShareButton from "@/components/ShareButton/ShareButton";
 import { BodyBlock } from "@/components/StoryBody/StoryBody";
 import { getAllStories, getStoryBySlug } from "@/lib/content/public";
 import { formatDate } from "@/lib/content/text";
@@ -93,6 +94,7 @@ export default async function StoryPage({ params }: PageProps<"/stories/[slug]">
                   body={story.body}
                 />
               )}
+              <ShareButton path={`/stories/${story.slug}`} title={story.title} />
             </div>
           </div>
         </div>

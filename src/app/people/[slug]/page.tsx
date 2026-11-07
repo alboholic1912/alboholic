@@ -12,6 +12,7 @@ import {
   type AssociatedPerson,
 } from "@/lib/content/public";
 import type { Citation, CitationType, Pronoun } from "@/lib/content/types";
+import ShareButton from "@/components/ShareButton/ShareButton";
 import { pageMetadata } from "@/lib/site";
 import { ChevronIcon, FactIcon, HomeIcon, PinIcon, SourceIcon, UserIcon } from "./icons";
 import styles from "./person.module.css";
@@ -116,6 +117,7 @@ export default async function PersonPage({ params }: PageProps<"/people/[slug]">
                 {person.birthplace}
               </p>
             )}
+            <ShareButton path={`/people/${person.slug}`} title={person.name} />
           </div>
         </div>
       </header>

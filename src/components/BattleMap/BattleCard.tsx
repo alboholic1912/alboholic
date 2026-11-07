@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import ShareButton from "@/components/ShareButton/ShareButton";
 import type { Battle, BattlePerson } from "@/lib/content/public";
 import { ArrowIcon, CalendarIcon, FlagIcon, PeopleIcon, PersonIcon, PinIcon, VersusIcon } from "./icons";
 import { regionOf, yearLabel } from "./layout";
@@ -50,6 +51,7 @@ export default function BattleCard({ battle, related, onPick, onSeeAll }: Battle
             </li>
           )}
         </ul>
+        <ShareButton path={`/battles?battle=${encodeURIComponent(battle.slug)}`} title={battle.name} className={styles.share} />
       </header>
 
       {battle.summary && <p className={styles.summary}>{battle.summary}</p>}
