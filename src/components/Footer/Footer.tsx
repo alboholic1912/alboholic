@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { INSTAGRAM_URL } from "@/lib/site";
 import styles from "./Footer.module.css";
 
 const LINKS = [
@@ -41,6 +42,11 @@ export default function Footer() {
                 <Link href={link.href}>{link.label}</Link>
               </li>
             ))}
+            <li>
+              <a href={INSTAGRAM_URL} target="_blank" rel="noreferrer">
+                Instagram
+              </a>
+            </li>
           </ul>
         </nav>
       </div>

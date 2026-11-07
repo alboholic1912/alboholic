@@ -10,6 +10,10 @@ export const SITE_DESCRIPTION = "A modern, readable home for Albanian history â€
  */
 export const CONTACT_EMAIL = "alboholic1912@gmail.com";
 
+/** Our Instagram profile, linked from the Contact and About pages and the footer. */
+export const INSTAGRAM_URL = "https://www.instagram.com/alboholic__/";
+export const INSTAGRAM_HANDLE = "@alboholic__";
+
 /**
  * Where the site lives, for canonical links, the sitemap and link previews. Set
  * NEXT_PUBLIC_SITE_URL once there is a custom domain; until then Vercel's own
