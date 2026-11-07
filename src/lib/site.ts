@@ -30,6 +30,15 @@ export const SITE_URL = (
 const DEFAULT_IMAGE = { url: "/opengraph-image", width: 1200, height: 630, alt: `${SITE_NAME} — ${SITE_TAGLINE}` };
 
 /**
+ * Uploaded images can be several MB, too big for WhatsApp's link previews, so previews use a
+ * compressed copy from src/app/share-image/route.ts. Other addresses are left as they are.
+ */
+function shareImageUrl(url: string) {
+  const media = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/media/`;
+  return url.startsWith(media) ? `/share-image?src=${encodeURIComponent(url)}` : url;
+}
+
+/**
  * The metadata for one public page: its title and description, its canonical address, and
  * the card shown when the link is shared. `title` is the page's own name, without the site's.
  */
@@ -50,7 +59,7 @@ export function pageMetadata({
   publishedTime?: string;
 }): Metadata {
   const fullTitle = title ? `${title} — ${SITE_NAME}` : `${SITE_NAME} — ${SITE_TAGLINE}`;
-  const images = [image ?? DEFAULT_IMAGE];
+  const images = [image ? { ...image, url: shareImageUrl(image.url) } : DEFAULT_IMAGE];
 
   return {
     title: fullTitle,
