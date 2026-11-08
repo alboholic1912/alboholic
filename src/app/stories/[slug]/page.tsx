@@ -58,6 +58,7 @@ export default async function StoryPage({ params }: PageProps<"/stories/[slug]">
             src={story.image}
             alt={story.title}
             sizes="(min-width: 960px) 60vw, 100vw"
+            eager
           />
           {story.credit && <span className={styles.credit}>{story.credit}</span>}
         </div>

@@ -9,6 +9,9 @@ import { isDesktop, PANEL_SPACE, PEEK_FRACTION, placeOf, DESKTOP_QUERY } from ".
 import { HOME_BOUNDS, MAP_LABELS, MAP_STYLE, MAX_BOUNDS } from "./mapStyle";
 import styles from "./MapCanvas.module.css";
 
+// Start fetching MapLibre as soon as this file reaches the browser, not after the page has hydrated.
+if (typeof window !== "undefined") loadMapLibre().catch(() => {});
+
 /** How close the map moves in on a selected battle, unless the reader is already closer. */
 const FOCUS_ZOOM = 8.6;
 /** Framing a set of battles never zooms in further than this, so one lone pin keeps its surroundings. */

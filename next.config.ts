@@ -59,6 +59,11 @@ const nextConfig: NextConfig = {
   },
   images: {
     qualities: [75, 90],
+    // AVIF is about 20% smaller than WebP at the same quality setting; browsers without it get WebP.
+    formats: ["image/avif", "image/webp"],
+    // Uploads always get a new file name (see lib/supabase/storage.ts), so an optimized copy never goes stale.
+    // If a file in public/ is redrawn, give it a new name too.
+    minimumCacheTTL: 2678400, // 31 days
     remotePatterns: [
       {
         protocol: "https",

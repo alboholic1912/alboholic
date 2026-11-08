@@ -42,8 +42,9 @@ export default function StoriesBrowser({ stories }: { stories: SearchableStory[]
 
       {visible.length > 0 ? (
         <div className={styles.grid}>
-          {visible.map(({ story }) => (
-            <StoryCard key={story.slug} story={story} />
+          {visible.map(({ story }, index) => (
+            // The first card is the biggest thing on screen when the page opens, so its picture loads first.
+            <StoryCard key={story.slug} story={story} eager={index === 0 && keywords.length === 0} />
           ))}
         </div>
       ) : (

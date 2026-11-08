@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { unstable_cache } from "next/cache";
+import { preconnect } from "react-dom";
 import BattleMap from "@/components/BattleMap/BattleMap";
 import { getBattles } from "@/lib/content/public";
 import { pageMetadata } from "@/lib/site";
@@ -41,6 +42,10 @@ export const viewport: Viewport = {
 };
 
 export default async function MapPage() {
+  // Open the connections to the map and relief tile servers while the page itself is still loading.
+  preconnect("https://tiles.openfreemap.org", { crossOrigin: "anonymous" });
+  preconnect("https://s3.amazonaws.com", { crossOrigin: "anonymous" });
+
   const battles = await getCachedBattles();
 
   return <BattleMap battles={battles} />;
