@@ -33,7 +33,8 @@ export default function PrivacyPage() {
           details, and keep them briefly in technical logs used to keep the site running and secure. We also use
           Vercel Web Analytics to count visits: which pages are viewed, the referring site, country, and device and
           browser type. It sets no cookies, does not track you across sites, and only shows us aggregate numbers, never
-          who you are. Our legal basis for both is our legitimate interest in operating a safe, working website and
+          who you are. Vercel Speed Insights likewise measures how fast pages load and respond, with no cookies and
+          no personal profile. Our legal basis for all of this is our legitimate interest in operating a safe, working website and
           understanding which stories people read (GDPR Art. 6(1)(f)).
         </>,
         <>
