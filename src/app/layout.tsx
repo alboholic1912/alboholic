@@ -4,6 +4,7 @@ import { Geist, Playfair_Display } from "next/font/google";
 import Header from "@/components/Header/Header";
 import Footer from "@/components/Footer/Footer";
 import BottomNav from "@/components/BottomNav/BottomNav";
+import SiteAnalytics from "@/components/SiteAnalytics/SiteAnalytics";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -35,6 +36,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <main>{children}</main>
         <Footer />
         <BottomNav />
+        <SiteAnalytics />
       </body>
     </html>
   );

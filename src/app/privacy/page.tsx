@@ -28,10 +28,13 @@ export default function PrivacyPage() {
           to meet the EU General Data Protection Regulation (GDPR).
         </>,
         <>
-          <strong>Reading the site.</strong> Alboholic has no reader accounts, no advertising, no analytics and no
-          tracking or marketing cookies. To deliver pages, the servers that host the site receive your IP address and
-          basic browser details, and keep them briefly in technical logs used to keep the site running and secure.
-          Our legal basis is our legitimate interest in operating a safe, working website (GDPR Art. 6(1)(f)).
+          <strong>Reading the site.</strong> Alboholic has no reader accounts, no advertising and no tracking or
+          marketing cookies. To deliver pages, the servers that host the site receive your IP address and basic browser
+          details, and keep them briefly in technical logs used to keep the site running and secure. We also use
+          Vercel Web Analytics to count visits: which pages are viewed, the referring site, country, and device and
+          browser type. It sets no cookies, does not track you across sites, and only shows us aggregate numbers, never
+          who you are. Our legal basis for both is our legitimate interest in operating a safe, working website and
+          understanding which stories people read (GDPR Art. 6(1)(f)).
         </>,
         <>
           <strong>The newsletter.</strong> If you <Link href="/subscribe">subscribe</Link>, we store the email address
