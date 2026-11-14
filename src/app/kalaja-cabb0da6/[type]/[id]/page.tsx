@@ -9,6 +9,7 @@ import { isContentType, type SourceRecord } from "@/lib/content/types";
 import BackLink from "@/components/BackLink/BackLink";
 import FeaturedImageSection from "@/components/FeaturedImage/FeaturedImageSection";
 import LocationPicker from "@/components/LocationPicker/LocationPicker";
+import { ContentTabs } from "@/components/Instagram/PostList";
 import SubmitButton from "@/components/SubmitButton/SubmitButton";
 import styles from "../../studio.module.css";
 
@@ -59,6 +60,8 @@ export default async function EditContentPage({
           {String(record.status)}
         </span>
       </div>
+
+      <ContentTabs type={type} id={id} active="edit" />
 
       {sources.length > 0 && (
         <div className={styles.section} style={{ marginBottom: "var(--space-6)" }}>
