@@ -9,7 +9,7 @@ import { isContentType, type ContentType } from "@/lib/content/types";
 import { generateStructuredContent } from "@/lib/ai/generate";
 import { DEFAULT_AI_MODEL } from "@/lib/ai/models";
 import { logUsage } from "@/lib/ai/usage";
-import { getProfile } from "./api";
+import { getProfile, isFacebookToken } from "./api";
 import { getAccount, publishPost, removeFiles, toJpeg, uploadJpeg } from "./publish";
 import {
   MAX_CAPTION,
@@ -38,10 +38,11 @@ function editorUrl(id: string, params: Record<string, string> = {}) {
 export async function connectInstagram(formData: FormData) {
   await requireUser();
   const token = String(formData.get("token") ?? "").trim();
+  const accountId = String(formData.get("accountId") ?? "").replace(/\D/g, "");
   if (!token) redirect(`${STUDIO}/instagram?error=${encodeURIComponent("Paste an access token.")}`);
 
   try {
-    const { igUserId, username } = await getProfile(token);
+    const { igUserId, username } = await getProfile(token, accountId);
     const now = new Date();
     const supabase = await createClient();
     const { error } = await supabase.from("instagram_account").upsert({
@@ -50,8 +51,11 @@ export async function connectInstagram(formData: FormData) {
       username,
       access_token: token,
       token_refreshed_at: now.toISOString(),
-      // Long-lived tokens last 60 days; the scheduler refreshes them weekly.
-      token_expires_at: new Date(now.getTime() + 60 * 24 * 60 * 60 * 1000).toISOString(),
+      // Instagram Login tokens last 60 days and the scheduler refreshes them weekly. Facebook
+      // system-user tokens don't expire, so no date is shown for them.
+      token_expires_at: isFacebookToken(token)
+        ? null
+        : new Date(now.getTime() + 60 * 24 * 60 * 60 * 1000).toISOString(),
       updated_at: now.toISOString(),
     });
     if (error) throw new Error(`Could not save the account: ${error.message}`);

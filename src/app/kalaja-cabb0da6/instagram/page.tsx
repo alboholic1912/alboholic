@@ -106,16 +106,23 @@ export default async function InstagramPage({ searchParams }: PageProps<"/kalaja
               <ol className={ig.steps}>
                 <li>The Instagram account must be a Professional account (Business or Creator). Switch in the Instagram app under Settings → Account type.</li>
                 <li>
-                  At developers.facebook.com, create an app, add the <strong>Instagram</strong> product and choose
-                  &ldquo;API setup with Instagram login&rdquo;.
+                  At developers.facebook.com, create an app, add the <strong>Instagram</strong> product and set up
+                  the Instagram API (Instagram login or Unified login).
                 </li>
                 <li>Under &ldquo;Generate access tokens&rdquo;, add the Alboholic Instagram account and press Generate token. Copy it.</li>
-                <li>Paste it below. It is stored only in the database and never shown again.</li>
+                <li>
+                  Paste it below. A token starting with <code>EAA</code> also needs the account ID, the number under
+                  the account name. The token is stored only in the database and never shown again.
+                </li>
               </ol>
               <form action={connectInstagram} className={styles.form}>
                 <div className={styles.field}>
                   <label htmlFor="token">Access token</label>
-                  <input id="token" name="token" type="text" autoComplete="off" spellCheck={false} placeholder="IGAA…" />
+                  <input id="token" name="token" type="text" autoComplete="off" spellCheck={false} placeholder="IGAA… or EAA…" />
+                </div>
+                <div className={styles.field}>
+                  <label htmlFor="accountId">Instagram account ID (for EAA tokens)</label>
+                  <input id="accountId" name="accountId" type="text" inputMode="numeric" autoComplete="off" placeholder="e.g. 17841469588617230" />
                 </div>
                 <div className={styles.actions}>
                   <SubmitButton className={`${styles.button} ${styles.buttonPrimary}`} pendingText="Connecting…">

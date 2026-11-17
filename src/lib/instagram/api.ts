@@ -1,13 +1,24 @@
 import "server-only";
 
 /**
- * Instagram API with Instagram Login (graph.instagram.com). Needs a professional (Business or
- * Creator) account and a long-lived token with instagram_business_basic and
- * instagram_business_content_publish. POST requests carry the token in the body; GET requests
- * put it in the query string, as Meta documents.
+ * Instagram publishing for a professional (Business or Creator) account. Two kinds of token work:
+ * - Instagram Login tokens ("IGAA…") talk to graph.instagram.com and last 60 days, refreshable.
+ * - Facebook / Unified Login tokens ("EAA…", e.g. a system-user token) talk to graph.facebook.com.
+ * The media endpoints are the same on both hosts. POST requests carry the token in the body;
+ * GET requests put it in the query string, as Meta documents.
  */
-const GRAPH = "https://graph.instagram.com/v27.0";
+const INSTAGRAM_GRAPH = "https://graph.instagram.com/v27.0";
+const FACEBOOK_GRAPH = "https://graph.facebook.com/v27.0";
 const REFRESH = "https://graph.instagram.com/refresh_access_token";
+
+/** Facebook-issued tokens start with "EAA"; Instagram Login tokens with "IG". */
+export function isFacebookToken(token: string): boolean {
+  return token.startsWith("EAA");
+}
+
+function graphBase(token: string): string {
+  return isFacebookToken(token) ? FACEBOOK_GRAPH : INSTAGRAM_GRAPH;
+}
 
 interface GraphError {
   error?: { message?: string; error_user_msg?: string; error_user_title?: string; code?: number };
@@ -22,8 +33,8 @@ async function graph<T>(
   const body = new URLSearchParams({ ...params, access_token: token });
   const response =
     method === "GET"
-      ? await fetch(`${GRAPH}${path}?${body}`, { cache: "no-store" })
-      : await fetch(`${GRAPH}${path}`, { method: "POST", body, cache: "no-store" });
+      ? await fetch(`${graphBase(token)}${path}?${body}`, { cache: "no-store" })
+      : await fetch(`${graphBase(token)}${path}`, { method: "POST", body, cache: "no-store" });
 
   const json = (await response.json().catch(() => ({}))) as T & GraphError;
   if (!response.ok || json.error) {
@@ -34,7 +45,37 @@ async function graph<T>(
   return json;
 }
 
-export async function getProfile(token: string): Promise<{ igUserId: string; username: string }> {
+/**
+ * Finds the Instagram account a token posts to. Instagram Login tokens answer /me directly. For
+ * Facebook tokens /me is the Facebook user, so the account ID is either given (shown next to the
+ * account in the Meta app) or found through a Facebook Page the account is linked to.
+ */
+export async function getProfile(
+  token: string,
+  accountId = ""
+): Promise<{ igUserId: string; username: string }> {
+  if (isFacebookToken(token)) {
+    if (accountId) {
+      const account = await graph<{ id: string; username?: string }>("GET", `/${accountId}`, token, {
+        fields: "id,username",
+      });
+      return { igUserId: account.id, username: account.username ?? "" };
+    }
+    const pages = await graph<{ data?: { instagram_business_account?: { id: string; username?: string } }[] }>(
+      "GET",
+      "/me/accounts",
+      token,
+      { fields: "instagram_business_account{id,username}" }
+    ).catch(() => ({ data: [] }));
+    const linked = pages.data?.find((page) => page.instagram_business_account)?.instagram_business_account;
+    if (!linked) {
+      throw new Error(
+        "This is a Facebook token. Also paste the Instagram account ID (the number under the account name in the Meta app)."
+      );
+    }
+    return { igUserId: linked.id, username: linked.username ?? "" };
+  }
+
   const me = await graph<{ id: string; user_id?: string; username?: string }>("GET", "/me", token, {
     fields: "id,user_id,username",
   });

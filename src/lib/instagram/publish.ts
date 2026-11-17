@@ -2,7 +2,7 @@ import "server-only";
 import sharp from "sharp";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { mediaUrl } from "@/lib/supabase/storage";
-import { publishMedia, refreshToken } from "./api";
+import { isFacebookToken, publishMedia, refreshToken } from "./api";
 import {
   INSTAGRAM_ASPECTS,
   type InstagramAccountRow,
@@ -54,7 +54,8 @@ export async function getAccount(supabase: SupabaseClient): Promise<InstagramAcc
 /** Long-lived tokens last 60 days. Refreshing weekly keeps the connection alive indefinitely. */
 export async function refreshAccountIfDue(supabase: SupabaseClient) {
   const account = await getAccount(supabase);
-  if (!account) return;
+  // Only Instagram Login tokens can be refreshed; Facebook system-user tokens never expire.
+  if (!account || isFacebookToken(account.access_token)) return;
   const age = Date.now() - new Date(account.token_refreshed_at).getTime();
   if (age < 7 * 24 * 60 * 60 * 1000) return;
 
