@@ -4,17 +4,11 @@ import { notFound } from "next/navigation";
 import ImagePlaceholder from "@/components/ImagePlaceholder/ImagePlaceholder";
 import SectionHeading from "@/components/SectionHeading/SectionHeading";
 import StoryCard from "@/components/StoryCard/StoryCard";
-import {
-  getAssociatedPeople,
-  getPeople,
-  getPersonBySlug,
-  getStoriesFeaturing,
-  type AssociatedPerson,
-} from "@/lib/content/public";
+import { getPeople, getPersonBySlug, getStoriesFeaturing } from "@/lib/content/public";
 import type { Citation, CitationType, Pronoun } from "@/lib/content/types";
 import ShareButton from "@/components/ShareButton/ShareButton";
 import { pageMetadata } from "@/lib/site";
-import { ChevronIcon, FactIcon, HomeIcon, PinIcon, SourceIcon, UserIcon } from "./icons";
+import { ChevronIcon, FactIcon, HomeIcon, PinIcon, SourceIcon } from "./icons";
 import styles from "./person.module.css";
 
 export const revalidate = 60;
@@ -69,11 +63,11 @@ export default async function PersonPage({ params }: PageProps<"/people/[slug]">
     notFound();
   }
 
-  const [stories, associated] = await Promise.all([getStoriesFeaturing(person), getAssociatedPeople(person)]);
+  const stories = await getStoriesFeaturing(person);
 
   const tags = [...new Set([person.category, person.role].filter((tag): tag is string => Boolean(tag)))];
   const introduction = person.summary ?? person.knownFor;
-  const hasArchive = associated.length > 0 || person.sources.length > 0;
+  const hasArchive = person.sources.length > 0;
 
   return (
     <article>
@@ -199,19 +193,6 @@ export default async function PersonPage({ params }: PageProps<"/people/[slug]">
 
         {hasArchive && (
           <div className={`${styles.section} ${styles.archive}`}>
-            {associated.length > 0 && (
-              <section>
-                <SectionHeading compact title="Associated People" href="/people" />
-                <ul className={styles.entities}>
-                  {associated.map((item) => (
-                    <li key={item.name}>
-                      <AssociatedPersonRow item={item} />
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            )}
-
             {person.sources.length > 0 && (
               <section>
                 <SectionHeading compact title="Sources" href="/sources" linkLabel="Methodology" />
@@ -234,38 +215,6 @@ export default async function PersonPage({ params }: PageProps<"/people/[slug]">
         )}
       </div>
     </article>
-  );
-}
-
-// Links to the person's own profile once one is published; until then it is a plain name.
-function AssociatedPersonRow({ item }: { item: AssociatedPerson }) {
-  const { profile } = item;
-  const role = item.role || profile?.category || profile?.role;
-  const text = (
-    <span>
-      <span className={styles.entityName}>{item.name}</span>
-      {role && <span className={styles.entityMeta}>{role}</span>}
-    </span>
-  );
-
-  if (!profile) {
-    return (
-      <div className={styles.entity}>
-        <span className={styles.entityIcon}>
-          <UserIcon size={18} />
-        </span>
-        {text}
-      </div>
-    );
-  }
-
-  return (
-    <Link href={`/people/${profile.slug}`} className={styles.entity}>
-      <span className={styles.entityThumb}>
-        <ImagePlaceholder tone={profile.imageTone} src={profile.image} alt="" sizes="44px" />
-      </span>
-      {text}
-    </Link>
   );
 }
 
