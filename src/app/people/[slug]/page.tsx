@@ -73,7 +73,7 @@ export default async function PersonPage({ params }: PageProps<"/people/[slug]">
 
   const tags = [...new Set([person.category, person.role].filter((tag): tag is string => Boolean(tag)))];
   const introduction = person.summary ?? person.knownFor;
-  const hasArchive = associated.length > 0 || person.relatedPlaces.length > 0 || person.sources.length > 0;
+  const hasArchive = associated.length > 0 || person.sources.length > 0;
 
   return (
     <article>
@@ -206,25 +206,6 @@ export default async function PersonPage({ params }: PageProps<"/people/[slug]">
                   {associated.map((item) => (
                     <li key={item.name}>
                       <AssociatedPersonRow item={item} />
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            )}
-
-            {person.relatedPlaces.length > 0 && (
-              <section>
-                <SectionHeading compact title="Associated Places" />
-                <ul className={styles.entities}>
-                  {person.relatedPlaces.map((place) => (
-                    <li key={place.name} className={styles.entity}>
-                      <span className={styles.entityIcon}>
-                        <PinIcon size={18} />
-                      </span>
-                      <span>
-                        <span className={styles.entityName}>{place.name}</span>
-                        {place.kind && <span className={styles.entityMeta}>{place.kind}</span>}
-                      </span>
                     </li>
                   ))}
                 </ul>
