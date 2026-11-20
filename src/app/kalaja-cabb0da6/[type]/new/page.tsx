@@ -3,9 +3,18 @@ import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/supabase/dal";
 import { generateContent } from "@/lib/content/actions";
 import { CONTENT_CONFIG } from "@/lib/content/config";
+import { AI_MODELS, AI_PROVIDER_LABELS, DEFAULT_AI_MODEL, type AiProvider } from "@/lib/ai/models";
 import { isContentType } from "@/lib/content/types";
 import BackLink from "@/components/BackLink/BackLink";
+import SubmitButton from "@/components/SubmitButton/SubmitButton";
+import FeaturedImageFields from "@/components/FeaturedImage/FeaturedImageFields";
 import styles from "../../studio.module.css";
+
+// Claude generation (especially Sonnet with large PDFs) can run close to
+// a minute. Vercel's default Server Action timeout is 10s (Hobby) / 15s (Pro),
+// so without this the request gets killed mid-generation in production even
+// though it works locally, where there's no such limit.
+export const maxDuration = 60;
 
 export async function generateMetadata({
   params,
@@ -20,12 +29,14 @@ export async function generateMetadata({
 
 export default async function NewContentPage({
   params,
+  searchParams,
 }: PageProps<"/kalaja-cabb0da6/[type]/new">) {
   await requireUser();
 
   const { type } = await params;
   if (!isContentType(type)) notFound();
   const config = CONTENT_CONFIG[type];
+  const { error } = await searchParams;
 
   return (
     <div className={styles.wrap}>
@@ -37,14 +48,15 @@ export default async function NewContentPage({
         Generate a new {config.label.toLowerCase()}
       </h1>
 
+      {error && <div className={styles.error} style={{ marginBottom: "var(--space-5)" }}>{error}</div>}
+
       <form action={generateContent} className={styles.form}>
         <input type="hidden" name="type" value={type} />
 
         <div className={styles.section}>
           <div className={styles.sectionTitle}>Sources</div>
           <p className={styles.help}>
-            The AI will use only what you give it here — books, papers, notes, PDFs, and YouTube
-            videos. It will not invent facts that aren&apos;t in these sources.
+            The AI will use only what you give it here — books, papers, notes, and PDFs. It will not invent facts that aren&apos;t in these sources.
           </p>
 
           <div className={styles.field}>
@@ -53,28 +65,43 @@ export default async function NewContentPage({
           </div>
 
           <div className={styles.field}>
-            <label htmlFor="youtubeUrls">YouTube URLs</label>
-            <textarea
-              id="youtubeUrls"
-              name="youtubeUrls"
-              rows={3}
-              placeholder={"One per line, e.g.\nhttps://www.youtube.com/watch?v=..."}
-            />
-            <span className={styles.help}>The AI watches the full video — one URL per line.</span>
-          </div>
-
-          <div className={styles.field}>
             <label htmlFor="files">PDFs / documents</label>
             <input id="files" name="files" type="file" accept=".pdf,.txt,application/pdf,text/plain" multiple />
           </div>
         </div>
 
-        <div className={styles.actions}>
-          <button type="submit" className={`${styles.button} ${styles.buttonPrimary}`}>
-            Generate {config.label.toLowerCase()}
-          </button>
+        <div className={styles.section}>
+          <div className={styles.sectionTitle}>Featured image</div>
+          <FeaturedImageFields context="new" shape={type === "people" ? "square" : "wide"} />
         </div>
-        <p className={styles.help}>This can take up to a minute, especially with video sources.</p>
+
+        <div className={styles.section}>
+          <div className={styles.sectionTitle}>Writing model</div>
+          <div className={styles.field}>
+            <label htmlFor="model">Generate with</label>
+            <select id="model" name="model" defaultValue={DEFAULT_AI_MODEL}>
+              {(Object.keys(AI_PROVIDER_LABELS) as AiProvider[]).map((provider) => (
+                <optgroup key={provider} label={AI_PROVIDER_LABELS[provider]}>
+                  {AI_MODELS.filter((m) => m.provider === provider).map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.label} — {m.description}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <div className={styles.actions}>
+          <SubmitButton
+            className={`${styles.button} ${styles.buttonPrimary}`}
+            pendingText="Generating…"
+          >
+            Generate {config.label.toLowerCase()}
+          </SubmitButton>
+        </div>
+        <p className={styles.help}>This can take up to a minute.</p>
       </form>
     </div>
   );

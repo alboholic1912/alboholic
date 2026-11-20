@@ -1,0 +1,315 @@
+/*
+ * Phone first: the page is one fixed screen (bar, period chips, map) with nothing to scroll,
+ * sitting exactly above the site's bottom tab bar. The site header is hidden on this route
+ * below 960px (see Header.module.css).
+ */
+.screen {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: calc(100dvh - var(--bottom-nav-height));
+  background: var(--color-bg);
+  /*
+   * clip, not hidden: a hidden box can still be scrolled by the browser (bringing a focused
+   * link in an off-screen sheet into view, say), which would shove the whole map upwards.
+   */
+  overflow: clip;
+}
+
+/* ---------- Top bar (phones) ---------- */
+
+.topbar {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: var(--space-1);
+  padding: calc(var(--space-2) + env(safe-area-inset-top)) var(--space-3) var(--space-1) var(--space-1);
+}
+
+.back {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  color: var(--color-text);
+}
+
+.heading {
+  flex: 1;
+  font-family: var(--font-serif);
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.roundButton {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid rgba(246, 243, 241, 0.22);
+  background: rgba(13, 10, 10, 0.82);
+  backdrop-filter: blur(8px);
+  color: var(--color-text);
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.roundButton:hover {
+  border-color: rgba(246, 243, 241, 0.5);
+}
+
+.back:focus-visible,
+.roundButton:focus-visible,
+.chip:focus-visible,
+.exploreButton:focus-visible,
+.zoom button:focus-visible {
+  outline: 2px solid var(--color-text);
+  outline-offset: 2px;
+}
+
+/* ---------- Period chips ---------- */
+
+/* One swipeable row: the chips never wrap, however many periods there are. */
+.chips {
+  display: flex;
+  flex-shrink: 0;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4) var(--space-3);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.chips::-webkit-scrollbar {
+  display: none;
+}
+
+.chip {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: var(--space-2);
+  height: 38px;
+  padding: 0 var(--space-4);
+  border-radius: 999px;
+  border: 1px solid rgba(246, 243, 241, 0.26);
+  background: rgba(13, 10, 10, 0.82);
+  font-family: var(--font-serif);
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  color: var(--color-text);
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.chip:hover {
+  border-color: rgba(246, 243, 241, 0.55);
+}
+
+.chipActive,
+.chipActive:hover {
+  border-color: var(--color-accent-bright);
+  background: var(--color-accent-gradient);
+  box-shadow: 0 0 0 3px rgba(239, 64, 69, 0.16);
+  color: #fff;
+}
+
+/* Phones have the search button in the top bar instead. */
+.chipSearch {
+  display: none;
+}
+
+/* ---------- Map and what floats over it ---------- */
+
+/*
+ * --map-cover-* say how much of the map the open sheet or panel hides, so the floating
+ * controls and the map credit can stay clear of it. 44% is PEEK_FRACTION in layout.ts.
+ */
+.stage {
+  --map-cover-bottom: 0px;
+  --map-cover-right: 0px;
+
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: clip;
+}
+
+.stage[data-cover="peek"],
+.stage[data-cover="full"] {
+  --map-cover-bottom: 44%;
+}
+
+.notice {
+  position: absolute;
+  z-index: 20;
+  top: var(--space-4);
+  right: 0;
+  left: 0;
+  width: fit-content;
+  max-width: calc(100% - var(--space-6));
+  margin-inline: auto;
+  padding: var(--space-2) var(--space-4);
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  background: rgba(13, 10, 10, 0.88);
+  font-size: 14px;
+  text-align: center;
+  color: var(--color-text-muted);
+}
+
+/* Bottom right on a phone, riding just above the sheet: where a thumb already is. */
+.controls {
+  position: absolute;
+  z-index: 20;
+  right: var(--space-3);
+  bottom: calc(var(--map-cover-bottom) + var(--space-3));
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: flex-end;
+  gap: var(--space-3);
+  transition:
+    bottom 0.38s cubic-bezier(0.32, 0.72, 0, 1),
+    opacity 0.2s ease;
+}
+
+.stage[data-cover="full"] .controls {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.exploreButton {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 52px;
+  padding: var(--space-2) var(--space-4);
+  border-radius: 999px;
+  border: 1px solid rgba(246, 243, 241, 0.3);
+  background: rgba(13, 10, 10, 0.88);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  font-family: var(--font-serif);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.2;
+  text-align: left;
+  color: var(--color-text);
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+
+.exploreButton:hover {
+  border-color: rgba(246, 243, 241, 0.6);
+}
+
+/* Two short lines keep the button narrow next to a thumb. */
+.exploreButton > span {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Pinching is how a phone zooms; the buttons are for a mouse. */
+.zoom {
+  display: none;
+}
+
+@media (min-width: 960px) {
+  /* The site header is back, so the map takes the rest of the window: 64px bar + 1px border. */
+  .screen {
+    height: calc(100dvh - 65px);
+  }
+
+  .topbar {
+    display: none;
+  }
+
+  .chips {
+    position: absolute;
+    z-index: 20;
+    top: var(--space-4);
+    left: var(--space-4);
+    /* Leaves room for the side panel, so the chips are never underneath it. */
+    max-width: calc(100% - 384px - var(--space-4) * 3);
+    padding: 0;
+  }
+
+  .chipSearch {
+    display: flex;
+  }
+
+  .stage[data-cover="peek"],
+  .stage[data-cover="full"] {
+    --map-cover-bottom: 0px;
+    --map-cover-right: calc(384px + var(--space-4));
+  }
+
+  .notice {
+    top: 72px;
+  }
+
+  .controls {
+    right: auto;
+    bottom: var(--space-4);
+    left: var(--space-4);
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .stage[data-cover="full"] .controls {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .exploreButton > span {
+    flex-direction: row;
+    gap: 0.3em;
+  }
+
+  .zoom {
+    display: flex;
+    flex-direction: column;
+    border-radius: var(--radius-sm);
+    border: 1px solid rgba(246, 243, 241, 0.22);
+    background: rgba(13, 10, 10, 0.82);
+    backdrop-filter: blur(8px);
+    overflow: hidden;
+  }
+
+  .zoom button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 40px;
+    border: none;
+    background: none;
+    color: var(--color-text);
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+  }
+
+  .zoom button:hover {
+    background: rgba(246, 243, 241, 0.08);
+  }
+
+  .zoom button + button {
+    border-top: 1px solid rgba(246, 243, 241, 0.16);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .controls {
+    transition: none;
+  }
+}

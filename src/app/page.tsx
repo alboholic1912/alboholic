@@ -1,20 +1,19 @@
+import BattlesSection from "@/components/BattlesSection/BattlesSection";
 import Hero from "@/components/Hero/Hero";
+import JoinStrip from "@/components/JoinStrip/JoinStrip";
 import LatestStories from "@/components/LatestStories/LatestStories";
 import PeopleSection from "@/components/PeopleSection/PeopleSection";
-import PeriodsSection from "@/components/PeriodsSection/PeriodsSection";
-import { getFeaturedStories } from "@/lib/content/public";
 
 export const revalidate = 60;
 
-export default async function Home() {
-  const featuredStories = await getFeaturedStories();
-
+export default function Home() {
   return (
     <>
-      <Hero stories={featuredStories} />
+      <Hero />
       <LatestStories />
       <PeopleSection />
-      <PeriodsSection />
+      <BattlesSection />
+      <JoinStrip />
     </>
   );
 }

@@ -1,0 +1,182 @@
+.toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding-block: var(--space-4);
+}
+
+/* A swipeable row on phones, so the filters never wrap into a tall block. */
+.filters {
+  display: flex;
+  gap: var(--space-2);
+  margin-inline: calc(var(--space-4) * -1);
+  padding-inline: var(--space-4);
+  overflow-x: auto;
+}
+
+.filters::-webkit-scrollbar {
+  display: none;
+}
+
+.filter {
+  flex-shrink: 0;
+  height: 38px;
+  padding: 0 var(--space-4);
+  border-radius: 6px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-elev);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.filter:hover {
+  border-color: var(--color-text-dim);
+}
+
+.filterActive,
+.filterActive:hover {
+  border-color: transparent;
+  background: var(--color-accent-gradient);
+  font-weight: 600;
+  color: #fff;
+}
+
+.controls {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.search {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  height: 38px;
+  padding: 0 var(--space-3);
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-elev);
+  color: var(--color-text-muted);
+}
+
+.search:focus-within {
+  border-color: var(--color-accent);
+}
+
+.search svg {
+  flex-shrink: 0;
+}
+
+.search input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  font: inherit;
+  font-size: 14px;
+  color: var(--color-text);
+}
+
+.search input::placeholder {
+  color: var(--color-text-dim);
+}
+
+.sort {
+  height: 38px;
+  padding: 0 var(--space-3);
+  border-radius: 6px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-elev);
+  font: inherit;
+  font-size: 14px;
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.layouts {
+  display: none;
+  border-radius: 6px;
+  border: 1px solid var(--color-border);
+  overflow: hidden;
+}
+
+.layouts button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 36px;
+  border: none;
+  background: var(--color-bg-elev);
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.layouts .layoutActive {
+  background: var(--color-accent-gradient);
+  color: #fff;
+}
+
+.grid,
+.list {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-4);
+  padding-bottom: var(--space-6);
+}
+
+.empty {
+  padding-block: var(--space-6) var(--space-8);
+  font-size: 14px;
+  color: var(--color-text-dim);
+}
+
+@media (min-width: 640px) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* The list layout only differs from the grid once cards can sit side by side. */
+  .layouts {
+    display: flex;
+  }
+}
+
+@media (min-width: 960px) {
+  .toolbar {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    padding-block: var(--space-5);
+  }
+
+  .filters {
+    margin-inline: 0;
+    padding-inline: 0;
+  }
+
+  .controls {
+    flex-shrink: 0;
+  }
+
+  .search {
+    flex: none;
+    width: 240px;
+  }
+
+  .grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1200px) {
+  .grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}

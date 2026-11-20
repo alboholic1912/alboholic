@@ -1,0 +1,91 @@
+.root {
+  position: relative;
+}
+
+/* On a phone the row runs edge to edge, with the next card peeking in to invite a swipe. */
+.rail {
+  display: flex;
+  gap: var(--space-4);
+  margin-inline: calc(var(--space-4) * -1);
+  padding: 2px var(--space-4) var(--space-2);
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: var(--space-4);
+  scrollbar-width: none;
+}
+
+.rail::-webkit-scrollbar {
+  display: none;
+}
+
+.rail > * {
+  flex: 0 0 var(--rail-card, 78%);
+  min-width: 0;
+  scroll-snap-align: start;
+}
+
+/* The arrows are for a mouse: a finger swipes. */
+.arrow {
+  display: none;
+  position: absolute;
+  top: calc(50% - 22px);
+  z-index: 3;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--color-border);
+  background: rgba(13, 10, 10, 0.92);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.55);
+  color: var(--color-text);
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.arrow:hover {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+.previous {
+  left: -20px;
+}
+
+.previous svg {
+  transform: scaleX(-1);
+}
+
+.next {
+  right: -20px;
+}
+
+@media (min-width: 640px) {
+  .rail {
+    --across: 2;
+    margin-inline: 0;
+    padding-inline: 0;
+    scroll-padding-inline: 0;
+  }
+
+  .rail > * {
+    flex-basis: calc((100% - (var(--across) - 1) * var(--space-4)) / var(--across));
+  }
+}
+
+@media (min-width: 960px) {
+  .rail {
+    --across: 3;
+  }
+}
+
+@media (min-width: 1200px) {
+  .rail {
+    --across: 4;
+  }
+}
+
+@media (hover: hover) and (min-width: 640px) {
+  .arrow {
+    display: grid;
+  }
+}

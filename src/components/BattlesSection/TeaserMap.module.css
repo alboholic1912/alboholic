@@ -1,0 +1,72 @@
+.map {
+  position: absolute;
+  inset: 0;
+  font-family: var(--font-sans);
+}
+
+.map :global(.maplibregl-canvas) {
+  outline: none;
+}
+
+/* ---------- Country names ---------- */
+
+.label {
+  font-family: var(--font-serif);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: rgba(246, 243, 241, 0.5);
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.85);
+  pointer-events: none;
+}
+
+.home {
+  font-size: 13px;
+  font-weight: 700;
+  color: rgba(246, 243, 241, 0.9);
+}
+
+/* ---------- Battle pins ---------- */
+
+.pin {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 214, 214, 0.8);
+  background: var(--color-accent-bright);
+  box-shadow:
+    0 0 0 3px rgba(239, 64, 69, 0.22),
+    0 0 12px 3px rgba(239, 64, 69, 0.5);
+  pointer-events: none;
+}
+
+.featured {
+  /* Above its neighbours. */
+  z-index: 1;
+  width: 13px;
+  height: 13px;
+  border: 2px solid #fff;
+  box-shadow:
+    0 0 0 3px rgba(5, 3, 3, 0.75),
+    0 0 0 4.5px var(--color-accent-bright),
+    0 0 22px 8px rgba(239, 64, 69, 0.6);
+}
+
+/* ---------- Map credit ---------- */
+
+.map :global(.maplibregl-ctrl-attrib) {
+  background: rgba(13, 10, 10, 0.82);
+  font-size: 11px;
+  color: var(--color-text-dim);
+}
+
+.map :global(.maplibregl-ctrl-attrib a) {
+  color: var(--color-text-muted);
+}
+
+.map :global(.maplibregl-ctrl-attrib-button) {
+  filter: invert(1);
+  opacity: 0.75;
+}

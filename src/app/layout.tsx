@@ -1,7 +1,10 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
+import { SITE_DESCRIPTION, SITE_NAME, SITE_URL, pageMetadata } from "@/lib/site";
 import { Geist, Playfair_Display } from "next/font/google";
 import Header from "@/components/Header/Header";
 import Footer from "@/components/Footer/Footer";
+import BottomNav from "@/components/BottomNav/BottomNav";
+import SiteAnalytics from "@/components/SiteAnalytics/SiteAnalytics";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -16,9 +19,13 @@ const playfairDisplay = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: "Alboholic — Stories that last",
-  description:
-    "A modern, readable home for Albanian history — stories, heroes, places and events.",
+  metadataBase: new URL(SITE_URL),
+  applicationName: SITE_NAME,
+  ...pageMetadata({ description: SITE_DESCRIPTION, path: "/" }),
+};
+
+export const viewport: Viewport = {
+  themeColor: "#050303",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -28,6 +35,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <Header />
         <main>{children}</main>
         <Footer />
+        <BottomNav />
+        <SiteAnalytics />
       </body>
     </html>
   );

@@ -8,3 +8,19 @@
   line-height: 1.7;
   color: var(--color-text-muted);
 }
+
+.prose a {
+  color: var(--color-text);
+  text-decoration: underline;
+  text-decoration-color: var(--color-accent-bright);
+  text-underline-offset: 3px;
+}
+
+.prose a:hover {
+  color: var(--color-accent-bright);
+}
+
+.prose strong {
+  color: var(--color-text);
+  font-weight: 600;
+}

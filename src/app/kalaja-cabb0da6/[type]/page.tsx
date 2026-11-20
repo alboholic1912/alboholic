@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/supabase/dal";
-import { listContent } from "@/lib/content/data";
+import { listContentSummaries } from "@/lib/content/data";
 import { CONTENT_CONFIG } from "@/lib/content/config";
 import { isContentType, type Status } from "@/lib/content/types";
 import BackLink from "@/components/BackLink/BackLink";
@@ -32,7 +32,7 @@ export default async function ContentListPage({
   const { status: statusParam } = await searchParams;
   const status = statusParam === "published" ? "published" : statusParam === "all" ? undefined : "review";
 
-  const items = await listContent(type, status as Status | undefined);
+  const items = await listContentSummaries(type, { status: status as Status | undefined });
 
   return (
     <div className={styles.wrap}>
@@ -75,16 +75,14 @@ export default async function ContentListPage({
       ) : (
         <div className={styles.list}>
           {items.map((item) => {
-            const record = item as unknown as Record<string, unknown>;
-            const title = String(record[config.titleField] ?? "Untitled");
             return (
               <Link
                 key={item.id}
                 href={`/kalaja-cabb0da6/${type}/${item.id}`}
-                className={styles.listRow}
+                className={`${styles.listRow} ${styles[`kind_${type}`]}`}
               >
                 <div>
-                  <div className={styles.listRowTitle}>{title}</div>
+                  <div className={styles.listRowTitle}>{item.title}</div>
                   <div className={styles.listRowMeta}>/{item.slug}</div>
                 </div>
                 <span

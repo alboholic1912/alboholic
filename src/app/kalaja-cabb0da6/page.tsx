@@ -1,10 +1,14 @@
 import type { Metadata } from "next";
+import type { JSX } from "react";
 import Link from "next/link";
 import { requireUser } from "@/lib/supabase/dal";
-import { countsByStatus, listContent } from "@/lib/content/data";
+import { countsByStatus, listContentSummaries } from "@/lib/content/data";
 import { CONTENT_CONFIG } from "@/lib/content/config";
-import { CONTENT_TYPES } from "@/lib/content/types";
-import { signOut } from "./actions";
+import { CONTENT_TYPES, type ContentType } from "@/lib/content/types";
+import { getAnyModel } from "@/lib/ai/models";
+import { getUsageSummary } from "@/lib/ai/usage";
+import { createClient } from "@/lib/supabase/server";
+import { BookIcon, UsersIcon, MapPinIcon, BulbIcon, PlusIcon } from "@/components/StudioShell/icons";
 import styles from "./studio.module.css";
 
 export const metadata: Metadata = {
@@ -12,94 +16,222 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default async function StudioPage() {
-  const user = await requireUser();
-  const counts = await countsByStatus();
+const TYPE_ICONS: Record<ContentType, () => JSX.Element> = {
+  stories: BookIcon,
+  people: UsersIcon,
+  battles: MapPinIcon,
+};
 
-  const reviewQueues = await Promise.all(
-    CONTENT_TYPES.map(async (type) => ({
-      type,
-      items: (await listContent(type, "review")).slice(0, 5),
-    }))
-  );
+export default async function StudioPage() {
+  await requireUser();
+  // Everything in one round: the panels don't depend on each other.
+  const [counts, usage, ideaCounts, reviewQueues] = await Promise.all([
+    countsByStatus(),
+    getUsageSummary(),
+    countIdeas(),
+    Promise.all(
+      CONTENT_TYPES.map(async (type) => ({
+        type,
+        items: await listContentSummaries(type, { status: "review", limit: 5 }),
+      }))
+    ),
+  ]);
   const pendingReview = reviewQueues.flatMap((q) =>
     q.items.map((item) => ({ type: q.type, item }))
   );
 
+  const totalReview = CONTENT_TYPES.reduce((sum, type) => sum + counts[type].review, 0);
+  const totalPublished = CONTENT_TYPES.reduce((sum, type) => sum + counts[type].published, 0);
+
   return (
     <div className={styles.wrap}>
-      <div className={styles.header}>
+      <div className={styles.dashHeader}>
         <div>
-          <h1 className={styles.title}>Studio</h1>
-          <p className={styles.meta}>Signed in as {user.email}</p>
+          <p className={styles.eyebrow}>Studio · Overview</p>
+          <h1 className={styles.title}>Dashboard</h1>
         </div>
-        <form action={signOut}>
-          <button className={styles.signOut} type="submit">
-            Sign out
-          </button>
-        </form>
+        <div className={styles.quickActions}>
+          {CONTENT_TYPES.map((type) => (
+            <Link key={type} href={`/kalaja-cabb0da6/${type}/new`} className={styles.quickAction}>
+              <PlusIcon />
+              {CONTENT_CONFIG[type].label}
+            </Link>
+          ))}
+        </div>
       </div>
 
-      <div className={styles.grid}>
+      <div className={styles.statGrid}>
         {CONTENT_TYPES.map((type) => {
           const config = CONTENT_CONFIG[type];
           const c = counts[type];
+          const total = c.review + c.published;
+          const publishedPct = total === 0 ? 0 : Math.round((c.published / total) * 100);
+          const Icon = TYPE_ICONS[type];
           return (
-            <Link key={type} href={`/kalaja-cabb0da6/${type}`} className={styles.cardLink}>
-              <div className={styles.card}>
-                <h2>{config.labelPlural}</h2>
-                <div className={styles.counts}>
-                  <div>
-                    <div className={styles.count}>{c.review}</div>
-                    <div className={styles.countLabel}>In review</div>
-                  </div>
-                  <div>
-                    <div className={styles.count}>{c.published}</div>
-                    <div className={styles.countLabel}>Published</div>
-                  </div>
+            <Link key={type} href={`/kalaja-cabb0da6/${type}`} className={`${styles.statCard} ${styles[`kind_${type}`]}`}>
+              <div className={styles.statCardTop}>
+                <span className={styles.statIcon}>
+                  <Icon />
+                </span>
+                <span className={styles.statCardTitle}>{config.labelPlural}</span>
+              </div>
+              <div className={styles.statNumbers}>
+                <div>
+                  <div className={styles.statValue}>{c.review}</div>
+                  <div className={styles.statLabel}>In review</div>
                 </div>
+                <div>
+                  <div className={styles.statValue}>{c.published}</div>
+                  <div className={styles.statLabel}>Published</div>
+                </div>
+              </div>
+              <div className={styles.statBar}>
+                <div className={styles.statBarFill} style={{ width: `${publishedPct}%` }} />
               </div>
             </Link>
           );
         })}
-        <Link href="/kalaja-cabb0da6/ideas" className={styles.cardLink}>
-          <div className={styles.card}>
-            <h2>Ideas</h2>
-            <p>Future stories and plans, parked for later.</p>
+
+        <Link href="/kalaja-cabb0da6/ideas" className={`${styles.statCard} ${styles.statCardIdeas}`}>
+          <div className={styles.statCardTop}>
+            <span className={styles.statIcon}>
+              <BulbIcon />
+            </span>
+            <span className={styles.statCardTitle}>Idea Lab</span>
+          </div>
+          <div className={styles.labStages}>
+            <div>
+              <div className={styles.labValue}>{ideaCounts.idea}</div>
+              <div className={styles.statLabel}>To do</div>
+            </div>
+            <div>
+              <div className={styles.labValue}>{ideaCounts.planned}</div>
+              <div className={styles.statLabel}>In progress</div>
+            </div>
+            <div>
+              <div className={styles.labValue}>{ideaCounts.done}</div>
+              <div className={styles.statLabel}>Done</div>
+            </div>
           </div>
         </Link>
       </div>
 
-      <div style={{ marginTop: "var(--space-8)" }}>
-        <h2 className={styles.sectionTitle} style={{ marginBottom: "var(--space-4)" }}>
-          Waiting for review
-        </h2>
-        {pendingReview.length === 0 ? (
-          <p className={styles.empty}>Nothing waiting on you right now.</p>
+      <div className={styles.panelGrid}>
+        <section className={styles.panel}>
+          <div className={styles.panelHeader}>
+            <h2 className={styles.sectionTitle}>Waiting for review</h2>
+            {pendingReview.length > 0 && (
+              <span className={styles.panelCount}>{pendingReview.length}</span>
+            )}
+          </div>
+          {pendingReview.length === 0 ? (
+            <p className={styles.empty}>Nothing waiting on you right now.</p>
+          ) : (
+            <div className={styles.list}>
+              {pendingReview.map(({ type, item }) => {
+                const config = CONTENT_CONFIG[type];
+                const Icon = TYPE_ICONS[type];
+                return (
+                  <Link
+                    key={`${type}-${item.id}`}
+                    href={`/kalaja-cabb0da6/${type}/${item.id}`}
+                    className={`${styles.listRow} ${styles[`kind_${type}`]}`}
+                  >
+                    <div className={styles.listRowMain}>
+                      <span className={styles.listRowIcon}>
+                        <Icon />
+                      </span>
+                      <div>
+                        <div className={styles.listRowTitle}>{item.title}</div>
+                        <div className={styles.listRowMeta}>{config.label}</div>
+                      </div>
+                    </div>
+                    <span className={`${styles.badge} ${styles.badgeReview}`}>Review</span>
+                  </Link>
+                );
+              })}
+            </div>
+          )}
+        </section>
+
+        <section className={styles.panel}>
+          <div className={styles.panelHeader}>
+            <h2 className={styles.sectionTitle}>Totals</h2>
+          </div>
+          <div className={styles.totalsList}>
+            <div className={styles.totalsRow}>
+              <span>In review</span>
+              <span className={styles.totalsValue}>{totalReview}</span>
+            </div>
+            <div className={styles.totalsRow}>
+              <span>Published</span>
+              <span className={styles.totalsValue}>{totalPublished}</span>
+            </div>
+            <div className={styles.totalsRow}>
+              <span>Content types</span>
+              <span className={styles.totalsValue}>{CONTENT_TYPES.length}</span>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <section className={styles.panel} style={{ marginTop: "var(--space-4)" }}>
+        <div className={styles.panelHeader}>
+          <h2 className={styles.sectionTitle}>AI usage</h2>
+        </div>
+        {usage === null ? (
+          <p className={styles.empty}>
+            Usage tracking isn&apos;t set up yet — run <code>supabase/ai_usage.sql</code> in the
+            Supabase SQL editor.
+          </p>
+        ) : usage.allTime.generations === 0 ? (
+          <p className={styles.empty}>No generations logged yet.</p>
         ) : (
-          <div className={styles.list}>
-            {pendingReview.map(({ type, item }) => {
-              const config = CONTENT_CONFIG[type];
-              const title = String(
-                (item as unknown as Record<string, unknown>)[config.titleField] ?? "Untitled"
-              );
-              return (
-                <Link
-                  key={`${type}-${item.id}`}
-                  href={`/kalaja-cabb0da6/${type}/${item.id}`}
-                  className={styles.listRow}
-                >
-                  <div>
-                    <div className={styles.listRowTitle}>{title}</div>
-                    <div className={styles.listRowMeta}>{config.label}</div>
-                  </div>
-                  <span className={`${styles.badge} ${styles.badgeReview}`}>Review</span>
-                </Link>
-              );
-            })}
+          <div className={styles.totalsList}>
+            {[
+              { label: "This month", bucket: usage.month },
+              { label: "All time", bucket: usage.allTime },
+            ].map(({ label, bucket }) => (
+              <div key={label} className={styles.totalsRow}>
+                <span>
+                  {label} · {bucket.generations} generation{bucket.generations === 1 ? "" : "s"} ·{" "}
+                  {formatTokens(bucket.inputTokens)} in / {formatTokens(bucket.outputTokens)} out
+                </span>
+                <span className={styles.totalsValue}>{formatUsd(bucket.costUsd)}</span>
+              </div>
+            ))}
+            {Object.entries(usage.byModel).map(([modelId, bucket]) => (
+              <div key={modelId} className={styles.totalsRow}>
+                <span>
+                  {getAnyModel(modelId)?.label ?? modelId} · {bucket.generations} generation
+                  {bucket.generations === 1 ? "" : "s"} · {formatTokens(bucket.inputTokens)} in /{" "}
+                  {formatTokens(bucket.outputTokens)} out
+                </span>
+                <span className={styles.totalsValue}>{formatUsd(bucket.costUsd)}</span>
+              </div>
+            ))}
+            <p className={styles.help}>Costs are estimates from token counts at list prices.</p>
           </div>
         )}
-      </div>
+      </section>
     </div>
   );
+}
+
+async function countIdeas() {
+  const counts = { idea: 0, planned: 0, done: 0 };
+  const supabase = await createClient();
+  const { data } = await supabase.from("ideas").select("status");
+  for (const row of data ?? []) {
+    if (row.status in counts) counts[row.status as keyof typeof counts] += 1;
+  }
+  return counts;
+}
+
+function formatTokens(n: number) {
+  return n >= 1000 ? `${(n / 1000).toFixed(1)}K` : String(n);
+}
+
+function formatUsd(n: number) {
+  return `$${n.toFixed(n < 1 ? 3 : 2)}`;
 }

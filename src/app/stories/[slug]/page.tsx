@@ -1,10 +1,13 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
-import BackLink from "@/components/BackLink/BackLink";
 import ImagePlaceholder from "@/components/ImagePlaceholder/ImagePlaceholder";
-import SectionHeading from "@/components/SectionHeading/SectionHeading";
-import StoryCard from "@/components/StoryCard/StoryCard";
+import ReadingMode from "@/components/ReadingMode/ReadingMode";
+import ShareButton from "@/components/ShareButton/ShareButton";
+import { BodyBlock } from "@/components/StoryBody/StoryBody";
 import { getAllStories, getStoryBySlug } from "@/lib/content/public";
+import { formatDate } from "@/lib/content/text";
+import { pageMetadata } from "@/lib/site";
 import styles from "./story.module.css";
 
 export const revalidate = 60;
@@ -23,10 +26,14 @@ export async function generateMetadata({
     return { title: "Story not found — Alboholic" };
   }
 
-  return {
-    title: `${story.title} — Alboholic`,
+  return pageMetadata({
+    title: story.title,
     description: story.excerpt,
-  };
+    path: `/stories/${story.slug}`,
+    image: story.image ? { url: story.image, alt: story.title } : undefined,
+    type: "article",
+    publishedTime: story.date,
+  });
 }
 
 export default async function StoryPage({ params }: PageProps<"/stories/[slug]">) {
@@ -42,64 +49,122 @@ export default async function StoryPage({ params }: PageProps<"/stories/[slug]">
     .slice(0, 3);
 
   return (
-    <article>
-      <div className="container">
-        <BackLink href="/stories" label="Back to Stories" />
-
-        <div className={styles.media}>
-          <ImagePlaceholder tone={story.imageTone} aiImage={story.aiImage} src={story.image} alt={story.title} />
+    <article lang={story.lang}>
+      <header className={styles.hero}>
+        <div className={styles.heroMedia}>
+          <ImagePlaceholder
+            tone={story.imageTone}
+            aiImage={story.aiImage}
+            src={story.image}
+            alt={story.title}
+            sizes="(min-width: 960px) 60vw, 100vw"
+            eager
+          />
           {story.credit && <span className={styles.credit}>{story.credit}</span>}
         </div>
 
-        <div className={styles.prose}>
-          <span className={styles.category}>{story.category}</span>
-          <h1 className={styles.title}>{story.title}</h1>
+        <div className={`container ${styles.heroInner}`}>
+          <nav className={styles.breadcrumb} aria-label="Breadcrumb">
+            <Link href="/" aria-label="Home">
+              <HomeIcon />
+            </Link>
+            <ChevronIcon />
+            <Link href="/stories">Stories</Link>
+            <ChevronIcon />
+            <span aria-current="page">{story.title}</span>
+          </nav>
 
-          <div className={styles.meta}>
-            <span className={styles.metaItem}>
-              <CalendarIcon />
-              {story.date}
-            </span>
-            <span className={styles.metaItem}>
-              <ClockIcon />
-              {story.readTime}
-            </span>
-          </div>
-
-          <p className={styles.excerpt}>{story.excerpt}</p>
-
-          {story.body ? (
-            story.body.map((paragraph, index) => <p key={index}>{paragraph}</p>)
-          ) : (
-            <p className={styles.placeholder}>
-              The full text of this story is still being written. Check back soon for the
-              complete account.
-            </p>
-          )}
-        </div>
-      </div>
-
-      {related.length > 0 && (
-        <section className={styles.related}>
-          <div className="container">
-            <SectionHeading title="More Stories" href="/stories" />
-            <div className={styles.relatedGrid}>
-              {related.map((item) => (
-                <StoryCard key={item.slug} story={item} />
-              ))}
+          <div className={styles.heroText}>
+            <div className={styles.kicker}>
+              <span className={styles.category}>{story.category}</span>
+              <span>{formatDate(story.date)}</span>
+            </div>
+            <h1 className={styles.title}>{story.title}</h1>
+            <p className={styles.excerpt}>{story.excerpt}</p>
+            <div className={styles.metaRow}>
+              <span className={styles.metaItem}>
+                <ClockIcon />
+                {story.readTime}
+              </span>
+              {story.body && (
+                <ReadingMode
+                  title={story.title}
+                  category={story.category}
+                  date={formatDate(story.date)}
+                  readTime={story.readTime}
+                  body={story.body}
+                />
+              )}
+              <ShareButton path={`/stories/${story.slug}`} title={story.title} />
             </div>
           </div>
-        </section>
-      )}
+        </div>
+      </header>
+
+      <div className={styles.paper}>
+        <div className={`container ${styles.layout}`}>
+          <div className={styles.prose}>
+            {story.body ? (
+              story.body.map((block, index) => <BodyBlock key={index} text={block} />)
+            ) : (
+              <p className={styles.placeholder}>
+                The full text of this story is still being written. Check back soon for the
+                complete account.
+              </p>
+            )}
+          </div>
+
+          <aside className={styles.aside}>
+            <dl className={styles.details}>
+              <div>
+                <dt>Category</dt>
+                <dd>{story.category}</dd>
+              </div>
+              <div>
+                <dt>Published</dt>
+                <dd>{formatDate(story.date)}</dd>
+              </div>
+              <div>
+                <dt>Reading time</dt>
+                <dd>{story.readTime}</dd>
+              </div>
+            </dl>
+
+            {related.length > 0 && (
+              <section className={styles.related}>
+                <h2 className={styles.relatedHeading}>More Stories</h2>
+                {related.map((item) => (
+                  <Link key={item.slug} href={`/stories/${item.slug}`} className={styles.relatedItem}>
+                    <div className={styles.relatedThumb}>
+                      <ImagePlaceholder tone={item.imageTone} src={item.image} alt="" sizes="96px" />
+                    </div>
+                    <div>
+                      <span className={styles.relatedCategory}>{item.category}</span>
+                      <span className={styles.relatedTitle}>{item.title}</span>
+                    </div>
+                  </Link>
+                ))}
+              </section>
+            )}
+          </aside>
+        </div>
+      </div>
     </article>
   );
 }
 
-function CalendarIcon() {
+function HomeIcon() {
   return (
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <rect x="3" y="5" width="18" height="16" rx="2" stroke="currentColor" strokeWidth="2" />
-      <path d="M3 10h18M8 3v4M16 3v4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M12 3 2 12h3v8h5v-6h4v6h5v-8h3L12 3z" />
+    </svg>
+  );
+}
+
+function ChevronIcon() {
+  return (
+    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M9 6l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }

@@ -3,66 +3,125 @@
   border-top: 1px solid var(--color-border-soft);
 }
 
-.row {
-  display: flex;
-  gap: var(--space-4);
-  overflow-x: auto;
-  padding-bottom: var(--space-2);
-  margin: 0 calc(var(--space-4) * -1);
-  padding-inline: var(--space-4);
-  scroll-snap-type: x mandatory;
+/* Portraits are narrower than story cards, so more of the next one shows on a phone. */
+.rail {
+  --rail-card: 64%;
 }
 
-.row::-webkit-scrollbar {
-  display: none;
+/* The whole tile is the portrait, with the name written across its foot. */
+.tile {
+  position: relative;
+  display: block;
+  aspect-ratio: 4 / 5;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-elev);
+  overflow: hidden;
+  transition: border-color 0.15s ease, transform 0.15s ease;
 }
 
-.card {
+.tile:hover {
+  border-color: var(--color-accent-dark);
+  transform: translateY(-2px);
+}
+
+/* Portraits are usually taller than the tile, so crop from the top to keep the face in frame. */
+.tile img {
+  object-position: 50% 18%;
+  transition: transform 0.4s ease;
+}
+
+.tile:hover img {
+  transform: scale(1.04);
+}
+
+.tile::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 45%, rgba(5, 3, 3, 0.9) 100%);
+  pointer-events: none;
+}
+
+.caption {
+  position: absolute;
+  right: 56px;
+  bottom: var(--space-3);
+  left: var(--space-4);
+  z-index: 1;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: var(--space-1);
-  flex: 0 0 140px;
-  text-align: center;
-  scroll-snap-align: start;
-}
-
-.media {
-  position: relative;
-  width: 104px;
-  height: 104px;
-  border-radius: 50%;
-  overflow: hidden;
-  border: 2px solid var(--color-border);
-  margin-bottom: var(--space-2);
+  gap: 3px;
 }
 
 .name {
-  font-size: 13px;
+  font-family: var(--font-serif);
+  font-size: 18px;
+  line-height: 1.2;
   font-weight: 700;
-  line-height: 1.3;
+  letter-spacing: -0.01em;
 }
 
-.role {
+/* A long role gives way to the years, which always stay whole. */
+.meta {
+  display: flex;
+  align-items: baseline;
+  min-width: 0;
   font-size: 12px;
-  color: var(--color-accent-bright);
+  color: rgba(246, 243, 241, 0.72);
 }
 
-.era {
-  font-size: 11px;
-  color: var(--color-text-dim);
+.tag {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.years {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.tag + .years::before {
+  content: "•";
+  margin-inline: 6px;
+}
+
+.go {
+  position: absolute;
+  right: var(--space-3);
+  bottom: var(--space-3);
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid rgba(246, 243, 241, 0.45);
+  background: rgba(5, 3, 3, 0.45);
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.tile:hover .go {
+  border-color: var(--color-accent);
+  background: var(--color-accent);
 }
 
 @media (min-width: 640px) {
-  .row {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    overflow: visible;
-    margin: 0;
-    padding-inline: 0;
+  .tile {
+    aspect-ratio: 4 / 3;
   }
+}
 
-  .card {
-    flex: initial;
+@media (min-width: 960px) {
+  .section {
+    padding-block: var(--space-7);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tile img {
+    transition: none;
   }
 }

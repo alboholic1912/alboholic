@@ -31,11 +31,23 @@
   --radius-md: 14px;
   --radius-lg: 20px;
 
+  /* Height of the phone tab bar (BottomNav): its 62px row and 1px border, plus the home-bar inset. */
+  --bottom-nav-height: calc(63px + env(safe-area-inset-bottom, 0px));
+
   color-scheme: dark;
+}
+
+/* The tab bar is for phones; from here up the header carries the navigation. */
+@media (min-width: 960px) {
+  :root {
+    --bottom-nav-height: 0px;
+  }
 }
 
 html {
   height: 100%;
+  /* Keeps anything scrolled or tabbed to clear of the tab bar. */
+  scroll-padding-bottom: var(--bottom-nav-height);
 }
 
 html,

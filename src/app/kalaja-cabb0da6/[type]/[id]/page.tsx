@@ -1,15 +1,19 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/supabase/dal";
 import { getContentById } from "@/lib/content/data";
 import { updateContent, publishContent, unpublishContent, deleteContent } from "@/lib/content/actions";
 import { CONTENT_CONFIG, type FieldDef } from "@/lib/content/config";
+import { formatRecordLines } from "@/lib/content/records";
 import { isContentType, type SourceRecord } from "@/lib/content/types";
 import BackLink from "@/components/BackLink/BackLink";
+import FeaturedImageSection from "@/components/FeaturedImage/FeaturedImageSection";
+import LocationPicker from "@/components/LocationPicker/LocationPicker";
+import { ContentTabs } from "@/components/Instagram/PostList";
+import SubmitButton from "@/components/SubmitButton/SubmitButton";
 import styles from "../../studio.module.css";
 
-const TYPES_WITH_IMAGE = new Set(["stories", "people", "places"]);
+const TYPES_WITH_IMAGE = new Set(["stories", "people", "battles"]);
 
 export async function generateMetadata({
   params,
@@ -24,12 +28,14 @@ export async function generateMetadata({
 
 export default async function EditContentPage({
   params,
+  searchParams,
 }: PageProps<"/kalaja-cabb0da6/[type]/[id]">) {
   await requireUser();
 
   const { type, id } = await params;
   if (!isContentType(type)) notFound();
   const config = CONTENT_CONFIG[type];
+  const { imageError } = await searchParams;
 
   const item = await getContentById(type, id);
   if (!item) notFound();
@@ -55,6 +61,8 @@ export default async function EditContentPage({
         </span>
       </div>
 
+      <ContentTabs type={type} id={id} active="edit" />
+
       {sources.length > 0 && (
         <div className={styles.section} style={{ marginBottom: "var(--space-6)" }}>
           <div className={styles.sectionTitle}>Sources used to generate this</div>
@@ -70,24 +78,22 @@ export default async function EditContentPage({
         </div>
       )}
 
+      {hasImage && (
+        <FeaturedImageSection
+          type={type}
+          id={id}
+          image={typeof record.image === "string" && record.image ? record.image : null}
+          error={typeof imageError === "string" ? imageError : undefined}
+          sectionClassName={styles.section}
+          sectionTitleClassName={styles.sectionTitle}
+          errorClassName={styles.error}
+          submitClassName={`${styles.button} ${styles.buttonPrimary}`}
+        />
+      )}
+
       <form action={updateContent} className={styles.form}>
         <input type="hidden" name="type" value={type} />
         <input type="hidden" name="id" value={id} />
-
-        {hasImage && (
-          <div className={styles.field}>
-            <label htmlFor="image">Featured image</label>
-            {typeof record.image === "string" && record.image ? (
-              <Image src={record.image} alt="" width={280} height={180} className={styles.thumb} unoptimized />
-            ) : (
-              <p className={styles.help}>No image uploaded yet.</p>
-            )}
-            <input id="image" type="file" name="image" accept="image/*" />
-            <span className={styles.help}>
-              Choose a file, then click &ldquo;Save changes&rdquo; below to upload it.
-            </span>
-          </div>
-        )}
 
         <div className={styles.field}>
           <label htmlFor="slug">Slug</label>
@@ -97,9 +103,12 @@ export default async function EditContentPage({
         {config.fields.map((field) => renderField(field, record))}
 
         <div className={styles.actions}>
-          <button type="submit" className={`${styles.button} ${styles.buttonPrimary}`}>
+          <SubmitButton
+            className={`${styles.button} ${styles.buttonPrimary}`}
+            pendingText="Saving…"
+          >
             Save changes
-          </button>
+          </SubmitButton>
         </div>
       </form>
 
@@ -108,29 +117,39 @@ export default async function EditContentPage({
           <form action={unpublishContent}>
             <input type="hidden" name="type" value={type} />
             <input type="hidden" name="id" value={id} />
-            <button type="submit" className={styles.button}>
+            <SubmitButton className={styles.button} pendingText="Unpublishing…">
               Unpublish
-            </button>
+            </SubmitButton>
           </form>
         ) : (
           <form action={publishContent}>
             <input type="hidden" name="type" value={type} />
             <input type="hidden" name="id" value={id} />
-            <button type="submit" className={`${styles.button} ${styles.buttonPrimary}`}>
+            <SubmitButton
+              className={`${styles.button} ${styles.buttonPrimary}`}
+              pendingText="Publishing…"
+            >
               Publish to site
-            </button>
+            </SubmitButton>
           </form>
         )}
         <form action={deleteContent}>
           <input type="hidden" name="type" value={type} />
           <input type="hidden" name="id" value={id} />
-          <button type="submit" className={`${styles.button} ${styles.buttonDanger}`}>
+          <SubmitButton
+            className={`${styles.button} ${styles.buttonDanger}`}
+            pendingText="Deleting…"
+          >
             Delete
-          </button>
+          </SubmitButton>
         </form>
       </div>
     </div>
   );
+}
+
+function toCoordinate(value: unknown): number | null {
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
 }
 
 function renderField(field: FieldDef, record: Record<string, unknown>) {
@@ -146,16 +165,21 @@ function renderField(field: FieldDef, record: Record<string, unknown>) {
   }
 
   if (field.kind === "select") {
+    const current = String(value ?? "");
+    const options = field.options ?? [];
     return (
       <div key={field.key} className={styles.field}>
         <label htmlFor={field.key}>{field.label}</label>
-        <select id={field.key} name={field.key} defaultValue={String(value ?? "")}>
-          {field.options?.map((option) => (
+        <select id={field.key} name={field.key} defaultValue={current}>
+          {/* Keep a value the options don't cover (e.g. not set yet) instead of silently replacing it on save. */}
+          {!options.includes(current) && <option value={current}>{current || "Not set"}</option>}
+          {options.map((option) => (
             <option key={option} value={option}>
               {option}
             </option>
           ))}
         </select>
+        {field.helpText && <span className={styles.help}>{field.helpText}</span>}
       </div>
     );
   }
@@ -165,7 +189,32 @@ function renderField(field: FieldDef, record: Record<string, unknown>) {
     return (
       <div key={field.key} className={styles.field}>
         <label htmlFor={field.key}>{field.label}</label>
-        <textarea id={field.key} name={field.key} rows={12} defaultValue={text} />
+        <textarea id={field.key} name={field.key} rows={field.rows ?? 12} defaultValue={text} />
+        {field.helpText && <span className={styles.help}>{field.helpText}</span>}
+      </div>
+    );
+  }
+
+  if (field.kind === "records") {
+    return (
+      <div key={field.key} className={styles.field}>
+        <label htmlFor={field.key}>{field.label}</label>
+        <textarea
+          id={field.key}
+          name={field.key}
+          rows={field.rows ?? 8}
+          defaultValue={formatRecordLines(value, field.columns ?? [])}
+        />
+        {field.helpText && <span className={styles.help}>{field.helpText}</span>}
+      </div>
+    );
+  }
+
+  if (field.kind === "coordinates") {
+    return (
+      <div key={field.key} className={styles.field}>
+        <span className={styles.fieldLabel}>{field.label}</span>
+        <LocationPicker lat={toCoordinate(record.lat)} lng={toCoordinate(record.lng)} />
         {field.helpText && <span className={styles.help}>{field.helpText}</span>}
       </div>
     );
@@ -175,7 +224,7 @@ function renderField(field: FieldDef, record: Record<string, unknown>) {
     return (
       <div key={field.key} className={styles.field}>
         <label htmlFor={field.key}>{field.label}</label>
-        <textarea id={field.key} name={field.key} rows={4} defaultValue={String(value ?? "")} />
+        <textarea id={field.key} name={field.key} rows={field.rows ?? 4} defaultValue={String(value ?? "")} />
         {field.helpText && <span className={styles.help}>{field.helpText}</span>}
       </div>
     );
@@ -186,6 +235,7 @@ function renderField(field: FieldDef, record: Record<string, unknown>) {
       <div key={field.key} className={styles.field}>
         <label htmlFor={field.key}>{field.label}</label>
         <input id={field.key} name={field.key} type="number" defaultValue={Number(value ?? 0)} />
+        {field.helpText && <span className={styles.help}>{field.helpText}</span>}
       </div>
     );
   }

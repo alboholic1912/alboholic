@@ -1,0 +1,173 @@
+/* ---------- Layout ---------- */
+
+.fields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+/* A full-width drop zone would be taller than the screen. */
+.fields > .dropField {
+  max-width: 480px;
+}
+
+.dropField {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.fieldHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.fieldLabel {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.help {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: var(--color-text-dim);
+}
+
+.linkButton {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--color-text-dim);
+  font-size: 0.8rem;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.linkButton:hover {
+  color: var(--color-text);
+}
+
+.fileInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  border: 0;
+}
+
+/* ---------- Dropzone ---------- */
+
+.dropzone {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  overflow: hidden;
+  border: 1.5px dashed var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+  color: var(--color-text-dim);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.dropzone:hover,
+.dropActive {
+  border-color: var(--reagent);
+  background: color-mix(in srgb, var(--reagent) 6%, var(--color-bg));
+}
+
+.dropzone:has(.fileInput:focus-visible) {
+  outline: 2px solid var(--reagent);
+  outline-offset: 2px;
+}
+
+.dropFilled {
+  border-style: solid;
+}
+
+.dropWide {
+  aspect-ratio: 3 / 2;
+}
+
+.dropSquare {
+  aspect-ratio: 1 / 1;
+  max-width: 360px;
+}
+
+.dropImage {
+  object-fit: cover;
+}
+
+.dropEmpty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+}
+
+.dropEmpty svg {
+  color: var(--color-text-dim);
+}
+
+.dropHint {
+  font-size: 0.76rem;
+  color: var(--color-text-dim);
+}
+
+.dropMeta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+.dropName {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---------- Edit page: current image ---------- */
+
+.stage {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+}
+
+.stageEmpty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-dim);
+  font-size: 0.9rem;
+  border-style: dashed;
+}
+
+.submitRow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border-soft);
+}

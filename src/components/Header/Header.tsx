@@ -1,30 +1,60 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import EagleMark from "@/components/EagleMark/EagleMark";
+import SearchDialog from "@/components/SearchDialog/SearchDialog";
 import styles from "./Header.module.css";
 
 const NAV_LINKS = [
   { href: "/", label: "Home" },
   { href: "/stories", label: "Stories" },
   { href: "/people", label: "People" },
-  { href: "/places", label: "Places" },
-  { href: "/periods", label: "Periods" },
-  { href: "/map", label: "Map" },
+  { href: "/battles", label: "Battles" },
   { href: "/about", label: "About" },
 ];
 
+// The Battles map is a full-screen page with its own top bar on phones.
+const IMMERSIVE_PATH = "/battles";
+
+// A section stays highlighted on its detail pages, e.g. People on /people/[slug].
+function isActive(pathname: string | null, href: string) {
+  return pathname === href || (href !== "/" && Boolean(pathname?.startsWith(`${href}/`)));
+}
+
 export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const pathname = usePathname();
+  const inStudio = Boolean(pathname?.startsWith("/kalaja-cabb0da6"));
+
+  // Ctrl+K / Cmd+K, or "/" outside a text field, opens the search from anywhere.
+  useEffect(() => {
+    if (inStudio) return;
+    const handleKey = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null;
+      const typing = target?.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(target?.tagName ?? "");
+      if ((event.key === "k" && (event.metaKey || event.ctrlKey)) || (event.key === "/" && !typing)) {
+        event.preventDefault();
+        setMenuOpen(false);
+        setSearchOpen(true);
+      }
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [inStudio]);
+
+  if (inStudio) {
+    return null;
+  }
 
   return (
-    <header className={styles.header}>
+    <header className={[styles.header, pathname === IMMERSIVE_PATH && styles.immersive].filter(Boolean).join(" ")}>
       <div className={`container ${styles.bar}`}>
         <Link href="/" className={styles.brand}>
-          <span className={styles.shield} aria-hidden="true">
-            🛡
+          <span className={styles.shield}>
+            <EagleMark size={24} />
           </span>
           <span className={styles.brandText}>Alboholic</span>
         </Link>
@@ -32,7 +62,7 @@ export default function Header() {
         <nav className={styles.nav} aria-label="Primary">
           <ul>
             {NAV_LINKS.map((link) => {
-              const active = pathname === link.href;
+              const active = isActive(pathname, link.href);
               return (
                 <li key={link.href}>
                   <Link
@@ -49,7 +79,17 @@ export default function Header() {
         </nav>
 
         <div className={styles.actions}>
-          <button type="button" className={styles.iconButton} aria-label="Search">
+          <button
+            type="button"
+            className={styles.iconButton}
+            aria-label="Search"
+            aria-haspopup="dialog"
+            title="Search (Ctrl+K)"
+            onClick={() => {
+              setMenuOpen(false);
+              setSearchOpen(true);
+            }}
+          >
             <SearchIcon />
           </button>
           <Link href="/subscribe" className={styles.subscribeButton}>
@@ -75,7 +115,7 @@ export default function Header() {
                 <Link
                   href={link.href}
                   onClick={() => setMenuOpen(false)}
-                  aria-current={pathname === link.href ? "page" : undefined}
+                  aria-current={isActive(pathname, link.href) ? "page" : undefined}
                 >
                   {link.label}
                 </Link>
@@ -84,6 +124,8 @@ export default function Header() {
           </ul>
         </nav>
       )}
+
+      <SearchDialog open={searchOpen} onClose={() => setSearchOpen(false)} />
     </header>
   );
 }

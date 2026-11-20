@@ -1,5 +1,12 @@
 .wrap {
-  min-height: 60vh;
+  --reagent: #ef4045;
+  --mono: ui-monospace, "SFMono-Regular", "Cascadia Code", Menlo, Consolas, monospace;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    radial-gradient(700px 340px at 50% 0, rgba(239, 64, 69, 0.1), transparent 70%);
+  background-size: 28px 28px, 28px 28px, auto;
+  min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -11,8 +18,18 @@
   max-width: 360px;
   background: var(--color-bg-elev);
   border: 1px solid var(--color-border);
+  border-top: 3px solid var(--reagent);
   border-radius: var(--radius-lg);
   padding: var(--space-7) var(--space-6);
+}
+
+.eyebrow {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--reagent);
+  margin-bottom: var(--space-2);
 }
 
 .title {
@@ -43,7 +60,7 @@
 }
 
 .field input:focus {
-  outline: 2px solid var(--color-accent);
+  outline: 2px solid var(--reagent);
   outline-offset: 1px;
 }
 
@@ -52,9 +69,9 @@
   padding: var(--space-3) var(--space-4);
   border-radius: var(--radius-sm);
   border: none;
-  background: var(--color-accent-gradient);
-  color: var(--color-text);
-  font-weight: 600;
+  background: var(--reagent);
+  color: #fff;
+  font-weight: 700;
   cursor: pointer;
 }
 
