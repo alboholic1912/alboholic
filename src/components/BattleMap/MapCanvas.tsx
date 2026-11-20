@@ -18,6 +18,10 @@ const FOCUS_ZOOM = 8.6;
 const FRAME_MAX_ZOOM = 8.4;
 /** A press that travels further than this is a pan that happened to start on a pin, not a tap. */
 const TAP_SLOP = 6;
+/** How long the map gets to draw itself before it is treated as stuck. */
+const LOAD_TIMEOUT = 12000;
+/** How long to wait for the browser to hand back a dropped drawing context. */
+const CONTEXT_RESTORE_WAIT = 2500;
 
 export interface MapHandle {
   zoomIn(): void;
@@ -94,7 +98,9 @@ export default function MapCanvas({
   const pins = useRef(new Map<string, { marker: Marker; element: HTMLButtonElement }>());
   const framedOnce = useRef(false);
   const [engine, setEngine] = useState<{ lib: MapLibre; map: MapLibreMap } | null>(null);
-  const [failed, setFailed] = useState(false);
+  /** Bumped to throw the map away and build a fresh one. */
+  const [attempt, setAttempt] = useState(0);
+  const [status, setStatus] = useState<"loading" | "ready" | "slow" | "failed">("loading");
 
   const select = useEffectEvent(onSelect);
   const ready = useEffectEvent(onReady);
@@ -108,7 +114,13 @@ export default function MapCanvas({
     [engine]
   );
 
-  // Create the map once. MapLibre is large, so it is loaded only here, after the page is interactive.
+  function rebuild() {
+    setEngine(null);
+    setStatus("loading");
+    setAttempt((count) => count + 1);
+  }
+
+  // Create the map, and again whenever it has to be rebuilt.
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
@@ -116,6 +128,13 @@ export default function MapCanvas({
     const registry = pins.current;
     const cleanups: (() => void)[] = [];
     let cancelled = false;
+    framedOnce.current = false;
+
+    const later = (callback: () => void, ms: number) => {
+      const timer = window.setTimeout(callback, ms);
+      cleanups.push(() => window.clearTimeout(timer));
+      return timer;
+    };
 
     loadMapLibre()
       .then((lib) => {
@@ -167,12 +186,65 @@ export default function MapCanvas({
 
         map.on("click", () => select(null));
 
+        // A tile that fails is just a gap; log it so a broken map can be explained.
+        map.on("error", (event) => console.warn("[map]", event.error?.message ?? event));
+
+        // If the map hasn't finished drawing after a while, its worker or tile requests have
+        // likely stalled, which leaves an empty map with no error. Build a fresh one once;
+        // after that, keep waiting but offer a retry, as it may just be a slow connection.
+        // The first tile to arrive proves the worker and tile servers are answering. ("load" is
+        // no good here: it waits for every last tile, and one slow relief tile holds it back.)
+        let drawing = false;
+        const onTile = (event: { tile?: unknown }) => {
+          if (!event.tile) return;
+          drawing = true;
+          setStatus("ready");
+          map.off("sourcedata", onTile);
+        };
+        map.on("sourcedata", onTile);
+        // A page in a background tab draws nothing at all, so only time spent in view counts.
+        const watch = () =>
+          later(() => {
+            if (drawing || cancelled) return;
+            if (document.hidden) return watch();
+            console.warn("[map] Still not drawn after", LOAD_TIMEOUT, "ms; attempt", attempt + 1);
+            if (attempt === 0) rebuild();
+            else setStatus("slow");
+          }, LOAD_TIMEOUT);
+        watch();
+
+        // Phones drop the map's drawing context when the tab is put away, and don't always give
+        // it back, which leaves a blank canvas. If it isn't restored quickly, start over.
+        let lostTimer = 0;
+        map.on("webglcontextlost", () => {
+          window.clearTimeout(lostTimer);
+          lostTimer = later(() => !cancelled && rebuild(), CONTEXT_RESTORE_WAIT);
+        });
+        map.on("webglcontextrestored", () => window.clearTimeout(lostTimer));
+
+        // Coming back to the page (the back button, or switching apps) can leave a stale canvas.
+        const refresh = () => {
+          if (document.visibilityState !== "visible") return;
+          map.resize();
+          map.triggerRepaint();
+        };
+        window.addEventListener("pageshow", refresh);
+        document.addEventListener("visibilitychange", refresh);
+        cleanups.push(() => {
+          window.removeEventListener("pageshow", refresh);
+          document.removeEventListener("visibilitychange", refresh);
+        });
+
         setEngine({ lib, map });
-        ready();
+        // Only on arrival: a rebuilt map keeps whatever the reader has open.
+        if (attempt === 0) ready();
       })
       .catch((error) => {
         console.error("[map] The map could not be created:", error);
-        if (!cancelled) setFailed(true);
+        if (cancelled) return;
+        // Usually a dropped download. Try once more before giving up.
+        if (attempt === 0) later(rebuild, 1500);
+        else setStatus("failed");
       });
 
     return () => {
@@ -180,7 +252,7 @@ export default function MapCanvas({
       registry.clear();
       for (const cleanup of cleanups) cleanup();
     };
-  }, []);
+  }, [attempt]);
 
   // Keep one pin per visible battle.
   useEffect(() => {
@@ -259,11 +331,25 @@ export default function MapCanvas({
 
   return (
     <div className={styles.root}>
-      <div ref={containerRef} className={styles.map} />
-      {failed && (
-        <p className={styles.unavailable} role="status">
-          The map could not be shown on this device. Use Explore Battles to browse instead.
+      <div key={attempt} ref={containerRef} className={styles.map} />
+      {status === "loading" && (
+        <p className={styles.loading} role="status">
+          <span className={styles.spinner} aria-hidden="true" />
+          Loading map…
         </p>
+      )}
+      {(status === "slow" || status === "failed") && (
+        <div className={styles.unavailable} role="status">
+          <p>
+            {status === "slow"
+              ? "The map is taking longer than usual to load."
+              : "The map could not be shown on this device."}{" "}
+            You can still browse with Explore Battles.
+          </p>
+          <button type="button" className={styles.retry} onClick={rebuild}>
+            Try again
+          </button>
+        </div>
       )}
     </div>
   );

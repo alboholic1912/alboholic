@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import EagleMark from "@/components/EagleMark/EagleMark";
+import SearchDialog from "@/components/SearchDialog/SearchDialog";
 import styles from "./Header.module.css";
 
 const NAV_LINKS = [
@@ -24,9 +25,27 @@ function isActive(pathname: string | null, href: string) {
 
 export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const pathname = usePathname();
+  const inStudio = Boolean(pathname?.startsWith("/kalaja-cabb0da6"));
 
-  if (pathname?.startsWith("/kalaja-cabb0da6")) {
+  // Ctrl+K / Cmd+K, or "/" outside a text field, opens the search from anywhere.
+  useEffect(() => {
+    if (inStudio) return;
+    const handleKey = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null;
+      const typing = target?.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(target?.tagName ?? "");
+      if ((event.key === "k" && (event.metaKey || event.ctrlKey)) || (event.key === "/" && !typing)) {
+        event.preventDefault();
+        setMenuOpen(false);
+        setSearchOpen(true);
+      }
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [inStudio]);
+
+  if (inStudio) {
     return null;
   }
 
@@ -60,7 +79,17 @@ export default function Header() {
         </nav>
 
         <div className={styles.actions}>
-          <button type="button" className={styles.iconButton} aria-label="Search">
+          <button
+            type="button"
+            className={styles.iconButton}
+            aria-label="Search"
+            aria-haspopup="dialog"
+            title="Search (Ctrl+K)"
+            onClick={() => {
+              setMenuOpen(false);
+              setSearchOpen(true);
+            }}
+          >
             <SearchIcon />
           </button>
           <Link href="/subscribe" className={styles.subscribeButton}>
@@ -95,6 +124,8 @@ export default function Header() {
           </ul>
         </nav>
       )}
+
+      <SearchDialog open={searchOpen} onClose={() => setSearchOpen(false)} />
     </header>
   );
 }

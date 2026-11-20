@@ -96,7 +96,7 @@
 }
 
 .iconButton {
-  display: none;
+  display: flex;
   align-items: center;
   justify-content: center;
   width: 36px;
@@ -169,10 +169,6 @@
 }
 
 @media (min-width: 640px) {
-  .iconButton {
-    display: flex;
-  }
-
   .subscribeButton {
     display: inline-flex;
   }
