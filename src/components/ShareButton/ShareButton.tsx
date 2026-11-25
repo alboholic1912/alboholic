@@ -1,28 +1,45 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { copyText } from "./copyText";
+import ShareSheet from "./ShareSheet";
 import styles from "./ShareButton.module.css";
 
+/** What the Instagram Story picture is of: see src/app/instagram-story/[kind]/[slug]/route.tsx. */
+export type StoryCard = { kind: "story" | "person" | "battle"; slug: string };
+
 /**
- * Shares a page. Phones and tablets get their own share menu (WhatsApp, Instagram, Messages…);
- * computers copy the link instead and say so for a moment.
+ * Shares a page. With `card`, it opens the share options: a ready-made Instagram Story
+ * picture of the page, or its link. Without, phones and tablets get their own share menu and
+ * computers copy the link, saying so for a moment.
  */
 export default function ShareButton({
   path,
   title,
+  card,
   className,
 }: {
   /** The page to share, e.g. "/stories/besa". */
   path: string;
   title: string;
+  card?: StoryCard;
   className?: string;
 }) {
   const [copied, setCopied] = useState(false);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  // The sheet is drawn on the first tap and kept, so it can slide away and come back.
+  const [sheetMade, setSheetMade] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   useEffect(() => () => clearTimeout(timer.current), []);
 
   async function share() {
+    if (card) {
+      setSheetMade(true);
+      setSheetOpen(true);
+      return;
+    }
+
     const url = new URL(path, window.location.origin).toString();
     const touch = window.matchMedia("(pointer: coarse)").matches;
 
@@ -36,7 +53,7 @@ export default function ShareButton({
       }
     }
 
-    if (await copy(url)) {
+    if (await copyText(url)) {
       setCopied(true);
       clearTimeout(timer.current);
       timer.current = setTimeout(() => setCopied(false), 2000);
@@ -44,30 +61,29 @@ export default function ShareButton({
   }
 
   return (
-    <button type="button" className={[styles.button, className].filter(Boolean).join(" ")} onClick={share}>
-      {copied ? <CheckIcon /> : <ShareIcon />}
-      <span aria-live="polite">{copied ? "Link copied" : "Share"}</span>
-    </button>
-  );
-}
+    <>
+      <button
+        type="button"
+        className={[styles.button, className].filter(Boolean).join(" ")}
+        aria-haspopup={card ? "dialog" : undefined}
+        onClick={share}
+      >
+        {copied ? <CheckIcon /> : <ShareIcon />}
+        <span aria-live="polite">{copied ? "Link copied" : "Share"}</span>
+      </button>
 
-async function copy(text: string) {
-  try {
-    await navigator.clipboard.writeText(text);
-    return true;
-  } catch {
-    // Older browsers, or clipboard access blocked: copy through a hidden text field.
-    const field = document.createElement("textarea");
-    field.value = text;
-    field.setAttribute("readonly", "");
-    field.style.position = "fixed";
-    field.style.opacity = "0";
-    document.body.appendChild(field);
-    field.select();
-    const ok = document.execCommand("copy");
-    field.remove();
-    return ok;
-  }
+      {card && sheetMade && (
+        <ShareSheet
+          open={sheetOpen}
+          onClose={() => setSheetOpen(false)}
+          url={new URL(path, window.location.origin).toString()}
+          title={title}
+          pictureSrc={`/instagram-story/${card.kind}/${encodeURIComponent(card.slug)}`}
+          fileName={`alboholic-${card.slug}.jpg`}
+        />
+      )}
+    </>
+  );
 }
 
 function ShareIcon() {

@@ -51,7 +51,12 @@ export default function BattleCard({ battle, related, onPick, onSeeAll }: Battle
             </li>
           )}
         </ul>
-        <ShareButton path={`/battles?battle=${encodeURIComponent(battle.slug)}`} title={battle.name} className={styles.share} />
+        <ShareButton
+          path={`/battles?battle=${encodeURIComponent(battle.slug)}`}
+          title={battle.name}
+          card={{ kind: "battle", slug: battle.slug }}
+          className={styles.share}
+        />
       </header>
 
       {battle.summary && <p className={styles.summary}>{battle.summary}</p>}

@@ -111,7 +111,7 @@ export default async function PersonPage({ params }: PageProps<"/people/[slug]">
                 {person.birthplace}
               </p>
             )}
-            <ShareButton path={`/people/${person.slug}`} title={person.name} />
+            <ShareButton path={`/people/${person.slug}`} title={person.name} card={{ kind: "person", slug: person.slug }} />
           </div>
         </div>
       </header>

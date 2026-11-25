@@ -95,7 +95,7 @@ export default async function StoryPage({ params }: PageProps<"/stories/[slug]">
                   body={story.body}
                 />
               )}
-              <ShareButton path={`/stories/${story.slug}`} title={story.title} />
+              <ShareButton path={`/stories/${story.slug}`} title={story.title} card={{ kind: "story", slug: story.slug }} />
             </div>
           </div>
         </div>
