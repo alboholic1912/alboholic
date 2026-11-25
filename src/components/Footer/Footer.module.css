@@ -33,15 +33,16 @@
   color: var(--color-text-dim);
 }
 
+/* On a phone the links are spaced for a fingertip: each is about 40px tall. */
 .links {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-2) var(--space-5);
+  gap: 0 var(--space-5);
 }
 
 .links a {
   display: block;
-  padding-block: var(--space-1);
+  padding-block: var(--space-3);
   font-size: 13px;
   font-weight: 500;
   color: var(--color-text-muted);
@@ -74,6 +75,10 @@
   .links {
     justify-content: flex-end;
     gap: var(--space-2) var(--space-6);
+  }
+
+  .links a {
+    padding-block: var(--space-1);
   }
 
   .legal {

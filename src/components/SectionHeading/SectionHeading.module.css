@@ -50,6 +50,17 @@
   transition: transform 0.15s ease;
 }
 
+/* A larger target for a fingertip, without moving anything. */
+.link {
+  position: relative;
+}
+
+.link::after {
+  content: "";
+  position: absolute;
+  inset: -12px -8px;
+}
+
 .link:hover svg {
   transform: translateX(3px);
 }

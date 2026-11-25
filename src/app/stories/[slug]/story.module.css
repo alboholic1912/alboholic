@@ -60,6 +60,17 @@
   color: var(--color-text);
 }
 
+/* A larger target for a fingertip, without moving anything. */
+.breadcrumb a {
+  position: relative;
+}
+
+.breadcrumb a::after {
+  content: "";
+  position: absolute;
+  inset: -12px -6px;
+}
+
 .breadcrumb svg {
   flex-shrink: 0;
 }

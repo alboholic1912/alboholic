@@ -3,7 +3,6 @@ import { SITE_DESCRIPTION, SITE_NAME, SITE_URL, pageMetadata } from "@/lib/site"
 import { Geist, Playfair_Display } from "next/font/google";
 import Header from "@/components/Header/Header";
 import Footer from "@/components/Footer/Footer";
-import BottomNav from "@/components/BottomNav/BottomNav";
 import SiteAnalytics from "@/components/SiteAnalytics/SiteAnalytics";
 import "./globals.css";
 
@@ -35,7 +34,6 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <Header />
         <main>{children}</main>
         <Footer />
-        <BottomNav />
         <SiteAnalytics />
       </body>
     </html>

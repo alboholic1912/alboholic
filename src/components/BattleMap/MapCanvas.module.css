@@ -255,7 +255,8 @@
 .map :global(.maplibregl-ctrl-bottom-left) {
   /* Stops short of the Explore button, which shares the bottom edge on phones. */
   right: 172px;
-  bottom: var(--map-cover-bottom, 0px);
+  bottom: max(var(--map-cover-bottom, 0px), env(safe-area-inset-bottom, 0px));
+  left: env(safe-area-inset-left, 0px);
   transition: bottom 0.38s cubic-bezier(0.32, 0.72, 0, 1);
 }
 

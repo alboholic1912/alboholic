@@ -2,8 +2,8 @@
   position: relative;
   isolation: isolate;
   display: flex;
-  /* Fills the first screen of a phone, between the header and the tab bar. */
-  min-height: clamp(540px, calc(100svh - 64px - var(--bottom-nav-height)), 720px);
+  /* Fills the first screen of a phone, below the header. */
+  min-height: clamp(540px, calc(100svh - 64px), 720px);
   overflow: hidden;
   /* The sky of the artwork, so nothing flashes while it loads. */
   background: #0a0b0e;

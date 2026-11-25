@@ -2,6 +2,7 @@
 
 import { useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import MobileMenu from "@/components/MobileMenu/MobileMenu";
 import type { Battle } from "@/lib/content/public";
 import { BATTLE_PERIODS } from "@/lib/content/types";
 import BattleCard from "./BattleCard";
@@ -105,6 +106,7 @@ export default function BattleMap({ battles }: { battles: Battle[] }) {
         <button type="button" className={styles.roundButton} aria-label="Search battles" onClick={() => setExplore("search")}>
           <SearchIcon />
         </button>
+        <MobileMenu triggerClassName={styles.roundButton} />
       </header>
 
       <div className={styles.chips} role="group" aria-label="Filter battles by period">

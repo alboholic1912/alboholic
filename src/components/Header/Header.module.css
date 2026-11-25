@@ -92,25 +92,51 @@
 .actions {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
+  gap: var(--space-2);
+}
+
+/* 40px on phones: a comfortable target for a thumb. */
+.iconButton,
+.menuButton {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--color-border);
+  cursor: pointer;
+  transition:
+    color 0.15s ease,
+    border-color 0.15s ease;
 }
 
 .iconButton {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  border: 1px solid var(--color-border);
   background: transparent;
   color: var(--color-text-muted);
-  cursor: pointer;
 }
 
 .iconButton:hover {
   color: var(--color-text);
   border-color: var(--color-text-dim);
+}
+
+/* Also worn by the menu's own close button, which sits exactly over this one. */
+.menuButton {
+  background: var(--color-bg-elev);
+  color: var(--color-text);
+}
+
+.menuButton:hover {
+  border-color: var(--color-text-dim);
+}
+
+.iconButton:focus-visible,
+.menuButton:focus-visible,
+.subscribeButton:focus-visible {
+  outline: 2px solid var(--color-text);
+  outline-offset: 2px;
 }
 
 .subscribeButton {
@@ -125,50 +151,11 @@
   white-space: nowrap;
 }
 
-.menuButton {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border: none;
-  background: transparent;
-  color: var(--color-text);
-  cursor: pointer;
-}
-
-.mobileNav {
-  border-top: 1px solid var(--color-border-soft);
-  background: var(--color-bg);
-  padding: var(--space-4);
-}
-
-.mobileNav ul {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-}
-
-.mobileNav a {
-  display: block;
-  padding: var(--space-3) var(--space-2);
-  font-size: 15px;
-  font-weight: 500;
-  color: var(--color-text-muted);
-  border-radius: var(--radius-sm);
-}
-
-.mobileNav a:hover {
-  color: var(--color-text);
-  background: var(--color-bg-elev);
-}
-
-.mobileNav a[aria-current="page"] {
-  color: var(--color-text);
-  background: var(--color-bg-elev);
-}
-
 @media (min-width: 640px) {
+  .actions {
+    gap: var(--space-3);
+  }
+
   .subscribeButton {
     display: inline-flex;
   }
@@ -181,6 +168,11 @@
 
   .nav {
     display: block;
+  }
+
+  .iconButton {
+    width: 36px;
+    height: 36px;
   }
 
   .menuButton {

@@ -6,6 +6,7 @@
 }
 
 .trigger {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -21,6 +22,13 @@
   line-height: 1;
   cursor: pointer;
   transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+/* The badge stays small; the area that answers a tap is 40px. */
+.trigger::after {
+  content: "";
+  position: absolute;
+  inset: -9px;
 }
 
 .trigger:hover,

@@ -4,27 +4,15 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import EagleMark from "@/components/EagleMark/EagleMark";
+import MobileMenu from "@/components/MobileMenu/MobileMenu";
 import SearchDialog from "@/components/SearchDialog/SearchDialog";
+import { SECTIONS, isActive } from "@/lib/nav";
 import styles from "./Header.module.css";
-
-const NAV_LINKS = [
-  { href: "/", label: "Home" },
-  { href: "/stories", label: "Stories" },
-  { href: "/people", label: "People" },
-  { href: "/battles", label: "Battles" },
-  { href: "/about", label: "About" },
-];
 
 // The Battles map is a full-screen page with its own top bar on phones.
 const IMMERSIVE_PATH = "/battles";
 
-// A section stays highlighted on its detail pages, e.g. People on /people/[slug].
-function isActive(pathname: string | null, href: string) {
-  return pathname === href || (href !== "/" && Boolean(pathname?.startsWith(`${href}/`)));
-}
-
 export default function Header() {
-  const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const pathname = usePathname();
   const inStudio = Boolean(pathname?.startsWith("/kalaja-cabb0da6"));
@@ -37,7 +25,6 @@ export default function Header() {
       const typing = target?.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(target?.tagName ?? "");
       if ((event.key === "k" && (event.metaKey || event.ctrlKey)) || (event.key === "/" && !typing)) {
         event.preventDefault();
-        setMenuOpen(false);
         setSearchOpen(true);
       }
     };
@@ -61,7 +48,7 @@ export default function Header() {
 
         <nav className={styles.nav} aria-label="Primary">
           <ul>
-            {NAV_LINKS.map((link) => {
+            {SECTIONS.map((link) => {
               const active = isActive(pathname, link.href);
               return (
                 <li key={link.href}>
@@ -85,45 +72,16 @@ export default function Header() {
             aria-label="Search"
             aria-haspopup="dialog"
             title="Search (Ctrl+K)"
-            onClick={() => {
-              setMenuOpen(false);
-              setSearchOpen(true);
-            }}
+            onClick={() => setSearchOpen(true)}
           >
             <SearchIcon />
           </button>
           <Link href="/subscribe" className={styles.subscribeButton}>
             Subscribe
           </Link>
-          <button
-            type="button"
-            className={styles.menuButton}
-            aria-label={menuOpen ? "Close menu" : "Open menu"}
-            aria-expanded={menuOpen}
-            onClick={() => setMenuOpen((value) => !value)}
-          >
-            {menuOpen ? <CloseIcon /> : <MenuIcon />}
-          </button>
+          <MobileMenu triggerClassName={styles.menuButton} />
         </div>
       </div>
-
-      {menuOpen && (
-        <nav className={styles.mobileNav} aria-label="Mobile">
-          <ul>
-            {NAV_LINKS.map((link) => (
-              <li key={link.href}>
-                <Link
-                  href={link.href}
-                  onClick={() => setMenuOpen(false)}
-                  aria-current={isActive(pathname, link.href) ? "page" : undefined}
-                >
-                  {link.label}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </nav>
-      )}
 
       <SearchDialog open={searchOpen} onClose={() => setSearchOpen(false)} />
     </header>
@@ -135,22 +93,6 @@ function SearchIcon() {
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2" />
       <path d="M21 21L16.65 16.65" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function MenuIcon() {
-  return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function CloseIcon() {
-  return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
     </svg>
   );
 }

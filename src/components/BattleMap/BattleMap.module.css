@@ -1,13 +1,13 @@
 /*
- * Phone first: the page is one fixed screen (bar, period chips, map) with nothing to scroll,
- * sitting exactly above the site's bottom tab bar. The site header is hidden on this route
- * below 960px (see Header.module.css).
+ * Phone first: the page is one fixed screen (bar, period chips, map) with nothing to scroll.
+ * The site header is hidden on this route below 960px (see Header.module.css), so the bar
+ * here carries the site menu.
  */
 .screen {
   position: relative;
   display: flex;
   flex-direction: column;
-  height: calc(100dvh - var(--bottom-nav-height));
+  height: 100dvh;
   background: var(--color-bg);
   /*
    * clip, not hidden: a hidden box can still be scrolled by the browser (bringing a focused
@@ -22,8 +22,13 @@
   display: flex;
   flex-shrink: 0;
   align-items: center;
-  gap: var(--space-1);
-  padding: calc(var(--space-2) + env(safe-area-inset-top)) var(--space-3) var(--space-1) var(--space-1);
+  gap: var(--space-2);
+  /* The page runs edge to edge (viewport-fit: cover), so it keeps clear of the notch. */
+  padding:
+    calc(var(--space-2) + env(safe-area-inset-top, 0px))
+    calc(var(--space-3) + env(safe-area-inset-right, 0px))
+    var(--space-1)
+    calc(var(--space-1) + env(safe-area-inset-left, 0px));
 }
 
 .back {
@@ -82,7 +87,11 @@
   display: flex;
   flex-shrink: 0;
   gap: var(--space-2);
-  padding: var(--space-2) var(--space-4) var(--space-3);
+  padding:
+    var(--space-2)
+    calc(var(--space-4) + env(safe-area-inset-right, 0px))
+    var(--space-3)
+    calc(var(--space-4) + env(safe-area-inset-left, 0px));
   overflow-x: auto;
   scrollbar-width: none;
 }
@@ -168,12 +177,15 @@
   color: var(--color-text-muted);
 }
 
-/* Bottom right on a phone, riding just above the sheet: where a thumb already is. */
+/*
+ * Bottom right on a phone, riding just above the sheet: where a thumb already is. With no
+ * sheet open they keep clear of the home bar instead.
+ */
 .controls {
   position: absolute;
   z-index: 20;
-  right: var(--space-3);
-  bottom: calc(var(--map-cover-bottom) + var(--space-3));
+  right: calc(var(--space-3) + env(safe-area-inset-right, 0px));
+  bottom: calc(max(var(--map-cover-bottom), env(safe-area-inset-bottom, 0px)) + var(--space-3));
   display: flex;
   flex-direction: column-reverse;
   align-items: flex-end;

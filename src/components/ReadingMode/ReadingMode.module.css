@@ -24,7 +24,7 @@
   outline-offset: 2px;
 }
 
-/* Full-screen reader. Covers the header, tab bar and everything else on the page. */
+/* Full-screen reader. Covers the header and everything else on the page. */
 .overlay {
   --reader-bg: #121010;
   --reader-text: #e6e1dd;
