@@ -4,10 +4,11 @@ import { getBattles, getPersonBySlug, getStoryBySlug } from "@/lib/content/publi
 import { SITE_NAME, SITE_URL } from "@/lib/site";
 
 /**
- * A 1080 x 1920 picture of a story, person or battle, made to be posted as an Instagram Story:
- * its image, title and summary, and where to read the rest. The Share button hands it to the
- * phone's share menu. Instagram never lets a picture carry a link, so the button copies the
- * page's address for the person sharing to paste into a Link sticker.
+ * A 1080 x 1920 picture of a story, person or battle, made to be posted as an Instagram Story,
+ * or as a feed post, which crops it to 4:5: its image, title and summary, and where to read the
+ * rest. The Share button hands it to the phone's share menu. Instagram never lets a picture
+ * carry a link, so the button copies the page's address for the person sharing to paste into a
+ * Link sticker.
  */
 
 // Made on first request, then kept for an hour like the pages themselves.
@@ -19,12 +20,29 @@ export async function generateStaticParams() {
 
 const WIDTH = 1080;
 const HEIGHT = 1920;
-/** The picture fills the top of the story and fades into the page colour under the text. */
-const IMAGE_HEIGHT = 1240;
 
-/** Instagram draws its own bar over the top 250px or so, and the reply box over the bottom. */
-const SAFE_TOP = 230;
-const SAFE_BOTTOM = 330;
+/**
+ * Shared as a feed post instead, the picture is cropped to 4:5 around its middle, losing 285px
+ * at the top and bottom. Everything that matters sits inside that middle, so one picture works
+ * as both: on a story the extra top is picture, under Instagram's own bar, and the extra bottom
+ * is room for its reply box and a Link sticker.
+ */
+const POST_CROP = (HEIGHT - (WIDTH * 5) / 4) / 2;
+/** The margin around everything, at the sides and inside the post's crop. */
+const INSET = 72;
+const SAFE_TOP = POST_CROP + INSET;
+const SAFE_BOTTOM = POST_CROP + INSET;
+
+/**
+ * The picture runs from just under Instagram's bar to behind the words, where it fades into the
+ * page colour. Starting it below the top keeps a portrait's face, which sits high in the
+ * picture, inside the post's crop instead of cut off at its edge.
+ */
+const IMAGE_TOP = 200;
+const IMAGE_BOTTOM = 1240;
+const IMAGE_HEIGHT = IMAGE_BOTTOM - IMAGE_TOP;
+/** A point on the picture's shade, as a share of its height. */
+const shadeAt = (y: number) => `${((y / IMAGE_BOTTOM) * 100).toFixed(1)}%`;
 
 const BG = "#050303";
 const TEXT = "#f6f3f1";
@@ -49,7 +67,6 @@ type Card = {
   meta: string[];
   cta: string;
   image?: string;
-  aiImage: boolean;
   tone: keyof typeof TONES;
 };
 
@@ -64,7 +81,6 @@ async function loadCard(kind: string, slug: string): Promise<Card | null> {
       meta: [story.readTime].filter(Boolean),
       cta: "Read the full story at",
       image: story.image,
-      aiImage: story.aiImage,
       tone: story.imageTone,
     };
   }
@@ -79,8 +95,6 @@ async function loadCard(kind: string, slug: string): Promise<Card | null> {
       meta: [person.era, person.birthplace].filter((item): item is string => Boolean(item)),
       cta: "Read their story at",
       image: person.image,
-      // Portraits on the site are all marked as AI-generated.
-      aiImage: true,
       tone: person.imageTone,
     };
   }
@@ -95,7 +109,6 @@ async function loadCard(kind: string, slug: string): Promise<Card | null> {
       meta: [battle.date, battle.location].filter(Boolean),
       cta: "Explore the Battles map at",
       image: battle.image,
-      aiImage: battle.aiImage,
       tone: "crimson",
     };
   }
@@ -103,10 +116,16 @@ async function loadCard(kind: string, slug: string): Promise<Card | null> {
   return null;
 }
 
-/** Shortens text at a word, so the summary never runs into the bottom of the story. */
+/**
+ * Shortens text so the summary never runs into the bottom of the story: at the end of a
+ * sentence if one ends well into the space, otherwise at a word.
+ */
 function clip(text: string, max: number) {
   const clean = text.replace(/\s+/g, " ").trim();
   if (clean.length <= max) return clean;
+  // Short words before a full stop are mostly abbreviations ("St.", "c."), not a sentence's end.
+  const sentence = clean.slice(0, max + 1).match(/^.*(?:\p{L}{3,}|\d+)[.!?]["'”’)]?(?= )/u)?.[0];
+  if (sentence && sentence.length >= max * 0.6) return sentence;
   const cut = clean.slice(0, max);
   return `${cut.slice(0, cut.lastIndexOf(" ")).replace(/[\s,;:.–—-]+$/, "")}…`;
 }
@@ -203,7 +222,14 @@ export async function GET(_request: Request, { params }: RouteContext<"/instagra
             alt=""
             width={WIDTH}
             height={IMAGE_HEIGHT}
-            style={{ position: "absolute", top: 0, left: 0, width: WIDTH, height: IMAGE_HEIGHT, objectFit: "cover" }}
+            style={{
+              position: "absolute",
+              top: IMAGE_TOP,
+              left: 0,
+              width: WIDTH,
+              height: IMAGE_HEIGHT,
+              objectFit: "cover",
+            }}
           />
         ) : (
           <div
@@ -215,7 +241,7 @@ export async function GET(_request: Request, { params }: RouteContext<"/instagra
               alignItems: "center",
               justifyContent: "center",
               width: WIDTH,
-              height: IMAGE_HEIGHT,
+              height: IMAGE_BOTTOM,
               backgroundImage: TONES[card.tone],
             }}
           >
@@ -226,74 +252,57 @@ export async function GET(_request: Request, { params }: RouteContext<"/instagra
           </div>
         )}
 
-        {/* Dark behind Instagram's own bar at the top, and a fade into the page under the words. */}
+        {/*
+          Page colour behind Instagram's bar, the picture fading in under the brand, and fading
+          out again into the page under the words.
+        */}
         <div
           style={{
             position: "absolute",
             top: 0,
             left: 0,
             width: WIDTH,
-            height: IMAGE_HEIGHT + 2,
-            backgroundImage:
-              "linear-gradient(180deg, rgba(5, 3, 3, 0.7) 0%, rgba(5, 3, 3, 0) 22%, rgba(5, 3, 3, 0) 42%, rgba(5, 3, 3, 0.72) 68%, #050303 96%)",
+            height: IMAGE_BOTTOM + 2,
+            backgroundImage: `linear-gradient(180deg, ${BG} 0%, ${BG} ${shadeAt(IMAGE_TOP)}, rgba(5, 3, 3, 0.55) ${shadeAt(IMAGE_TOP + 150)}, rgba(5, 3, 3, 0) ${shadeAt(IMAGE_TOP + 400)}, rgba(5, 3, 3, 0.72) ${shadeAt(845)}, ${BG} ${shadeAt(1190)})`,
           }}
         />
 
-        {/* Brand, and the AI notice the site shows on every generated picture. */}
+        {/* The brand, on the left: Instagram's story editor puts its tools down the right-hand side. */}
         <div
           style={{
             position: "absolute",
             top: SAFE_TOP,
-            left: 72,
-            right: 72,
+            left: INSET,
             display: "flex",
             alignItems: "center",
-            justifyContent: "space-between",
+            gap: 18,
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                width: 68,
-                height: 68,
-                borderRadius: 14,
-                backgroundImage: "linear-gradient(135deg, #c81f22 0%, #8c1013 100%)",
-              }}
-            >
-              <svg width="52" height="52" viewBox="0 6 200 200" fill="#0a0606">
-                <path d={EAGLE_HALF} />
-                <path d={EAGLE_HALF} transform="translate(200 0) scale(-1 1)" />
-              </svg>
-            </div>
-            <div style={{ fontFamily: serif, fontWeight: 700, fontSize: 44, letterSpacing: -0.5 }}>{SITE_NAME}</div>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: 68,
+              height: 68,
+              borderRadius: 14,
+              backgroundImage: "linear-gradient(135deg, #c81f22 0%, #8c1013 100%)",
+            }}
+          >
+            <svg width="52" height="52" viewBox="0 6 200 200" fill="#0a0606">
+              <path d={EAGLE_HALF} />
+              <path d={EAGLE_HALF} transform="translate(200 0) scale(-1 1)" />
+            </svg>
           </div>
-
-          {image && card.aiImage && (
-            <div
-              style={{
-                display: "flex",
-                padding: "10px 20px",
-                borderRadius: 999,
-                border: "1.5px solid rgba(246, 243, 241, 0.35)",
-                backgroundColor: "rgba(5, 3, 3, 0.6)",
-                fontSize: 24,
-                color: "rgba(246, 243, 241, 0.86)",
-              }}
-            >
-              AI-generated illustration
-            </div>
-          )}
+          <div style={{ fontFamily: serif, fontWeight: 700, fontSize: 44, letterSpacing: -0.5 }}>{SITE_NAME}</div>
         </div>
 
         {/* The words, kept clear of Instagram's reply box and of room for a Link sticker. */}
         <div
           style={{
             position: "absolute",
-            left: 72,
-            right: 72,
+            left: INSET,
+            right: INSET,
             bottom: SAFE_BOTTOM,
             display: "flex",
             flexDirection: "column",
