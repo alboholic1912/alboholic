@@ -13,6 +13,7 @@ import {
   MapPinIcon,
   BulbIcon,
   CameraIcon,
+  ChartIcon,
   LogoutIcon,
   ExternalIcon,
   MenuIcon,
@@ -35,8 +36,11 @@ const NAV_GROUPS: { heading?: string; items: NavItem[] }[] = [
     ],
   },
   {
-    heading: "Social",
-    items: [{ href: "/kalaja-cabb0da6/instagram", label: "Instagram", icon: CameraIcon }],
+    heading: "Audience",
+    items: [
+      { href: "/kalaja-cabb0da6/analytics", label: "Analytics", icon: ChartIcon },
+      { href: "/kalaja-cabb0da6/instagram", label: "Instagram", icon: CameraIcon },
+    ],
   },
   {
     heading: "Lab",

@@ -23,11 +23,13 @@ Open http://localhost:3000.
 
 ## Database
 
-The whole schema lives in `supabase/`. Paste `schema.sql` into the Supabase SQL editor, then `ai_usage.sql` and `ideas_v2.sql`. All three are safe to run again whenever they change.
+The whole schema lives in `supabase/`. Paste `schema.sql` into the Supabase SQL editor, then `ai_usage.sql`, `ideas_v2.sql` and `analytics.sql`. All of them are safe to run again whenever they change.
 
 Only accounts listed in the `admins` table can sign in to the Studio or write anything; `schema.sql` adds the project's first account automatically. Public sign-ups should also be switched off in Supabase (Authentication → Sign In / Providers).
 
 Newsletter sign-ups are stored in the `subscribers` table.
+
+Visitor analytics are our own and cookieless (see `supabase/analytics.sql`): each public page reports to `/api/p`, and the Studio shows the numbers under Analytics. Visits from development and preview deployments aren't counted, and neither are visits from a browser signed in to the Studio. Set `ANALYTICS_IN_DEV=1` to count local visits while testing.
 
 ## Scripts
 

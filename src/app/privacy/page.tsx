@@ -8,7 +8,7 @@ export const metadata = pageMetadata({
   path: "/privacy",
 });
 
-const LAST_UPDATED = "7 November 2026";
+const LAST_UPDATED = "27 November 2026";
 
 export default function PrivacyPage() {
   const contact = CONTACT_EMAIL ? (
@@ -30,12 +30,25 @@ export default function PrivacyPage() {
         <>
           <strong>Reading the site.</strong> Alboholic has no reader accounts, no advertising and no tracking or
           marketing cookies. To deliver pages, the servers that host the site receive your IP address and basic browser
-          details, and keep them briefly in technical logs used to keep the site running and secure. We also use
-          Vercel Web Analytics to count visits: which pages are viewed, the referring site, country, and device and
-          browser type. It sets no cookies, does not track you across sites, and only shows us aggregate numbers, never
-          who you are. Vercel Speed Insights likewise measures how fast pages load and respond, with no cookies and
-          no personal profile. Our legal basis for all of this is our legitimate interest in operating a safe, working website and
-          understanding which stories people read (GDPR Art. 6(1)(f)).
+          details, and keep them briefly in technical logs used to keep the site running and secure.
+        </>,
+        <>
+          <strong>Counting visits.</strong> We count visits with our own analytics, which run on our own site and
+          database rather than an outside analytics company. When you open a page, your browser tells us which page it
+          is, the site or app that sent you (for example Instagram or Google) and any campaign tag in the link, whether
+          you&rsquo;re on a phone, tablet or computer, your browser and operating system, and, while the page stays
+          open, how long it has been on screen and how far down you have scrolled. Our hosting provider adds your
+          approximate location (country, region and town) worked out from your IP address. Your IP address itself is
+          never stored: it is combined with your browser details and a random secret that is replaced every day, and
+          only the scrambled result is kept. That lets us count several pages on the same day as one visitor, but you
+          can&rsquo;t be recognised on another day, and the result can&rsquo;t be turned back into your address. No
+          cookies are set and nothing is stored on your device for this. We only look at the results as totals and
+          lists in our private editing area, never to identify anyone. You can turn it off for your browser on the{" "}
+          <Link href="/analytics-opt-out">visitor counting page</Link>. While we switch over, Vercel Web Analytics also
+          counts visits in the same cookieless, aggregate way, and Vercel Speed Insights measures how fast pages load and
+          respond, with no cookies and no personal profile. Our legal basis for the technical logs and for counting
+          visits is our legitimate interest in operating a safe, working website and understanding which stories people
+          read (GDPR Art. 6(1)(f)).
         </>,
         <>
           <strong>The newsletter.</strong> If you <Link href="/subscribe">subscribe</Link>, we store the email address
@@ -55,8 +68,8 @@ export default function PrivacyPage() {
         <>
           <strong>Cookies and storage.</strong> We don&rsquo;t set cookies for readers, so there is no cookie banner. If
           you change the reading mode settings on a story (such as text size), your choice is saved in your own
-          browser&rsquo;s storage so it is remembered next time. It never leaves your device, and you can clear it at
-          any time from your browser settings.
+          browser&rsquo;s storage so it is remembered next time. The same goes for turning off visitor counting. These
+          choices never leave your device, and you can clear them at any time from your browser settings.
         </>,
         <>
           <strong>Who else sees your data.</strong> We never sell, rent or trade your data, and we don&rsquo;t share it
@@ -67,7 +80,8 @@ export default function PrivacyPage() {
         </>,
         <>
           <strong>How long we keep it.</strong> Technical logs are kept only for a short period and then deleted
-          automatically. Newsletter addresses are kept until you unsubscribe, then deleted. Messages are kept only as
+          automatically. Visit records are deleted automatically after two years, and each day&rsquo;s secret used to
+          scramble IP addresses is deleted when the next day begins. Newsletter addresses are kept until you unsubscribe, then deleted. Messages are kept only as
           long as needed to deal with them.
         </>,
         <>
