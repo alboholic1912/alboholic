@@ -5,7 +5,10 @@ import { copyText } from "./copyText";
 import ShareSheet from "./ShareSheet";
 import styles from "./ShareButton.module.css";
 
-/** What the Instagram Story picture is of: see src/app/instagram-story/[kind]/[slug]/route.tsx. */
+/**
+ * What the Instagram pictures are of: see src/app/instagram-story (the Story) and
+ * src/app/instagram-picture (posts and reels).
+ */
 export type StoryCard = { kind: "story" | "person" | "battle"; slug: string };
 
 /**
@@ -78,8 +81,12 @@ export default function ShareButton({
           onClose={() => setSheetOpen(false)}
           url={new URL(path, window.location.origin).toString()}
           title={title}
-          pictureSrc={`/instagram-story/${card.kind}/${encodeURIComponent(card.slug)}`}
-          fileName={`alboholic-${card.slug}.jpg`}
+          pictureSrcs={{
+            story: `/instagram-story/${card.kind}/${encodeURIComponent(card.slug)}`,
+            post: `/instagram-picture/post/${card.kind}/${encodeURIComponent(card.slug)}`,
+            reel: `/instagram-picture/reel/${card.kind}/${encodeURIComponent(card.slug)}`,
+          }}
+          fileName={`alboholic-${card.slug}`}
         />
       )}
     </>

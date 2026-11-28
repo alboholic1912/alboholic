@@ -105,7 +105,44 @@
   color: var(--color-text);
 }
 
-/* ---------- Instagram Story ---------- */
+/* ---------- Instagram pictures ---------- */
+
+/* Story, Post or Reel: which picture the section below shows and shares. */
+.formats {
+  display: grid;
+  grid-auto-columns: minmax(0, 1fr);
+  grid-auto-flow: column;
+  gap: 4px;
+  margin-bottom: calc(var(--space-2) * -1);
+  padding: 4px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-bg);
+}
+
+.format {
+  min-height: 36px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--color-text-muted);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.format:hover {
+  color: var(--color-text);
+}
+
+.format[aria-pressed="true"] {
+  background: var(--color-bg-elev-2);
+  color: var(--color-text);
+}
 
 .story {
   display: flex;
@@ -121,6 +158,7 @@
   flex-shrink: 0;
   width: 96px;
   aspect-ratio: 9 / 16;
+  align-self: flex-start;
   overflow: hidden;
   border-radius: 10px;
   border: 1px solid var(--color-border);
@@ -287,6 +325,7 @@
 }
 
 .close:focus-visible,
+.format:focus-visible,
 .primary:focus-visible,
 .retry:focus-visible,
 .secondary:focus-visible {

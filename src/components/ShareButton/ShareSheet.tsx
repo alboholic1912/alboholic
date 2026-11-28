@@ -35,27 +35,67 @@ function canSharePictures() {
 
 type Note = "copied" | "ig-copied" | "share-failed" | null;
 
+export type Format = "story" | "post" | "reel";
+
+/** The three Instagram pictures, in the order the picker shows them. */
+const FORMATS: Record<
+  Format,
+  { label: string; heading: string; share: string; width: number; ratio: string; phone: string; computer: string }
+> = {
+  story: {
+    label: "Story",
+    heading: "Instagram Story",
+    share: "Share to Story",
+    width: 96,
+    ratio: "9 / 16",
+    phone:
+      "Posts this picture to your story and copies the link. In Instagram, add a Link sticker and paste it, so people can tap through.",
+    computer: "Save the picture and post it from your phone. Add a Link sticker with the page’s link, so people can tap through.",
+  },
+  post: {
+    label: "Post",
+    heading: "Instagram post",
+    share: "Share as post",
+    width: 136,
+    ratio: "4 / 5",
+    phone: "Opens your share menu with this picture. Pick Instagram, then Post. The picture says where to read the rest.",
+    computer: "Save the picture and post it from your phone. The picture says where to read the rest.",
+  },
+  reel: {
+    label: "Reel",
+    heading: "Instagram reel",
+    share: "Share as reel",
+    width: 96,
+    ratio: "9 / 16",
+    phone: "Opens your share menu with this picture. Pick Instagram, then Reel. The picture says where to read the rest.",
+    computer: "Save the picture and post it as a reel from your phone. The picture says where to read the rest.",
+  },
+};
+
 /**
- * The share options for a page: post a ready-made picture of it to an Instagram Story, or
- * share or copy its link. A bottom sheet on phones, a small dialog on computers.
+ * The share options for a page: post a ready-made picture of it to an Instagram Story, post
+ * or reel, or share or copy its link. A bottom sheet on phones, a small dialog on computers.
  *
  * Instagram never takes a link from a website, so sharing to a Story also copies the page's
- * address, ready to paste into a Link sticker. The picture is fetched as the sheet opens,
- * because a phone only lets a page share in direct response to a tap.
+ * address, ready to paste into a Link sticker. A website can't choose between Story, post and
+ * reel either: the person picks that in Instagram, so each gets its own button and picture.
+ * The picture is fetched before it is needed, because a phone only lets a page share in direct
+ * response to a tap.
  */
 export default function ShareSheet({
   open,
   onClose,
   url,
   title,
-  pictureSrc,
+  pictureSrcs,
   fileName,
 }: {
   open: boolean;
   onClose: () => void;
   url: string;
   title: string;
-  pictureSrc: string;
+  pictureSrcs: Record<Format, string>;
+  /** Without the extension; the format is added, e.g. "alboholic-besa" → "alboholic-besa-post.jpg". */
   fileName: string;
 }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -67,6 +107,10 @@ export default function ShareSheet({
   const [failedSrc, setFailedSrc] = useState<string | null>(null);
   const [attempt, setAttempt] = useState(0);
   const [note, setNote] = useState<Note>(null);
+  const [format, setFormat] = useState<Format>("story");
+  const pictureSrc = pictureSrcs[format];
+  const pictureName = `${fileName}-${format}.jpg`;
+  const options = FORMATS[format];
 
   // Open with a slide up; close by sliding away first.
   useEffect(() => {
@@ -98,7 +142,7 @@ export default function ShareSheet({
         setPicture({
           src: pictureSrc,
           preview: objectUrl,
-          file: new File([blob], fileName, { type: blob.type || "image/jpeg" }),
+          file: new File([blob], pictureName, { type: blob.type || "image/jpeg" }),
         });
       },
       () => current && setFailedSrc(pictureSrc)
@@ -107,13 +151,21 @@ export default function ShareSheet({
       current = false;
       if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
-  }, [pictureSrc, fileName, attempt]);
+  }, [pictureSrc, pictureName, attempt]);
 
   // A picture of the page this sheet was showing before is no use for this one.
   const shown = picture?.src === pictureSrc ? picture : null;
   const file = shown?.file ?? null;
   const preview = shown?.preview ?? null;
   const failed = failedSrc === pictureSrc;
+
+  // Once the first picture is in, the other two are made too, so switching is instant.
+  const { story, post, reel } = pictureSrcs;
+  const firstReady = Boolean(preview);
+  useEffect(() => {
+    if (!open || !firstReady) return;
+    for (const src of [story, post, reel]) loadPicture(src).catch(() => {});
+  }, [open, firstReady, story, post, reel]);
 
   useEffect(
     () => () => {
@@ -131,9 +183,9 @@ export default function ShareSheet({
   }
 
   // No awaiting before navigator.share: it must run while the tap still counts.
-  function shareToStory() {
+  function sharePicture() {
     if (!file) return;
-    void copyText(url).then((ok) => ok && flash("ig-copied", 6000));
+    if (format === "story") void copyText(url).then((ok) => ok && flash("ig-copied", 6000));
     navigator.share({ files: [file] }).catch((error) => {
       if (error instanceof DOMException && error.name === "AbortError") return;
       flash("share-failed", 4000);
@@ -144,9 +196,9 @@ export default function ShareSheet({
     if (!preview) return;
     const link = document.createElement("a");
     link.href = preview;
-    link.download = fileName;
+    link.download = pictureName;
     link.click();
-    void copyText(url).then((ok) => ok && flash("ig-copied", 6000));
+    if (format === "story") void copyText(url).then((ok) => ok && flash("ig-copied", 6000));
   }
 
   function shareLink() {
@@ -204,11 +256,28 @@ export default function ShareSheet({
           </button>
         </header>
 
-        <section className={styles.story} aria-label="Instagram Story">
-          <div className={styles.preview}>
+        <div className={styles.formats} role="group" aria-label="Instagram picture">
+          {(Object.keys(FORMATS) as Format[]).map((item) => (
+            <button
+              key={item}
+              type="button"
+              className={styles.format}
+              aria-pressed={item === format}
+              onClick={() => {
+                setFormat(item);
+                setNote(null);
+              }}
+            >
+              {FORMATS[item].label}
+            </button>
+          ))}
+        </div>
+
+        <section className={styles.story} aria-label={options.heading}>
+          <div className={styles.preview} style={{ width: options.width, aspectRatio: options.ratio }}>
             {preview ? (
               // eslint-disable-next-line @next/next/no-img-element -- a picture made on the fly, shown as is
-              <img src={preview} alt={`Story picture for ${title}`} />
+              <img key={preview} src={preview} alt={`${options.heading} picture for ${title}`} />
             ) : (
               <span className={failed ? undefined : styles.shimmer} aria-hidden="true" />
             )}
@@ -217,13 +286,9 @@ export default function ShareSheet({
           <div className={styles.storyText}>
             <h3 className={styles.storyTitle}>
               <InstagramIcon />
-              Instagram Story
+              {options.heading}
             </h3>
-            <p className={styles.help}>
-              {phone
-                ? "Posts this picture to your story and copies the link. In Instagram, add a Link sticker and paste it, so people can tap through."
-                : "Save the picture and post it from your phone. Add a Link sticker with the page’s link, so people can tap through."}
-            </p>
+            <p className={styles.help}>{phone ? options.phone : options.computer}</p>
 
             {failed ? (
               <button
@@ -242,7 +307,7 @@ export default function ShareSheet({
                 className={styles.primary}
                 disabled={!ready}
                 aria-busy={!ready}
-                onClick={phone ? shareToStory : download}
+                onClick={phone ? sharePicture : download}
               >
                 {!ready ? (
                   <>
@@ -250,7 +315,7 @@ export default function ShareSheet({
                     Preparing picture…
                   </>
                 ) : phone ? (
-                  "Share to Story"
+                  options.share
                 ) : (
                   <>
                     <DownloadIcon />

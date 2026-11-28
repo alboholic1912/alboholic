@@ -1,14 +1,13 @@
 import { ImageResponse } from "next/og";
-import sharp from "sharp";
-import { getBattles, getPersonBySlug, getStoryBySlug } from "@/lib/content/public";
-import { SITE_NAME, SITE_URL } from "@/lib/site";
+import { BG, EAGLE_HALF, RED, SITE_HOST, TEXT, TONES, jpegResponse, loadCard, loadFonts, loadImage } from "@/lib/instagram/picture";
+import { SITE_NAME } from "@/lib/site";
 
 /**
  * A 1080 x 1920 picture of a story, person or battle, made to be posted as an Instagram Story,
  * or as a feed post, which crops it to 4:5: its image, title and summary, and where to read the
  * rest. The Share button hands it to the phone's share menu. Instagram never lets a picture
  * carry a link, so the button copies the page's address for the person sharing to paste into a
- * Link sticker.
+ * Link sticker. Posts and reels get their own pictures, from src/app/instagram-picture.
  */
 
 // Made on first request, then kept for an hour like the pages themselves.
@@ -44,78 +43,6 @@ const IMAGE_HEIGHT = IMAGE_BOTTOM - IMAGE_TOP;
 /** A point on the picture's shade, as a share of its height. */
 const shadeAt = (y: number) => `${((y / IMAGE_BOTTOM) * 100).toFixed(1)}%`;
 
-const BG = "#050303";
-const TEXT = "#f6f3f1";
-const RED = "#ef4045";
-
-/** Also in EagleMark.tsx and opengraph-image.tsx. */
-const EAGLE_HALF =
-  "M100 62C101 49 104 38 110 29C113 23 119 19 126 20L138 24L153 29L143 32.5L150 40L136 37.5C130 40 125 46 122 54L121 60L133 57L150 46L168 38L191 21L171 47L198 41L168 57L199 60L163 66L194 79L157 74L183 95L149 82L167 107L140 88L146 109L130 93L118 99L114 112L123 121L137 134L153 132L141 139L151 151L137 144L136 159L129 144L116 131L110 129L110 139L127 153L113 151L122 169L109 163L112 183L104 173L100 193Z";
-
-/** The colour wash used when there is no picture, as on the site's cards. */
-const TONES = {
-  crimson: "radial-gradient(120% 90% at 20% 20%, #5a1418 0%, #2a0d0f 55%, #14090a 100%)",
-  amber: "radial-gradient(120% 90% at 25% 15%, #6b3a1a 0%, #34190f 55%, #170c09 100%)",
-  stone: "radial-gradient(120% 90% at 30% 20%, #4a3f3a 0%, #241d1a 55%, #120f0d 100%)",
-  slate: "radial-gradient(120% 90% at 25% 20%, #3a3c45 0%, #1d1e24 55%, #100f12 100%)",
-} as const;
-
-type Card = {
-  kicker: string;
-  title: string;
-  summary?: string;
-  meta: string[];
-  cta: string;
-  image?: string;
-  tone: keyof typeof TONES;
-};
-
-async function loadCard(kind: string, slug: string): Promise<Card | null> {
-  if (kind === "story") {
-    const story = await getStoryBySlug(slug);
-    if (!story) return null;
-    return {
-      kicker: ["Story", story.category].filter(Boolean).join("  ·  "),
-      title: story.title,
-      summary: story.excerpt,
-      meta: [story.readTime].filter(Boolean),
-      cta: "Read the full story at",
-      image: story.image,
-      tone: story.imageTone,
-    };
-  }
-
-  if (kind === "person") {
-    const person = await getPersonBySlug(slug);
-    if (!person) return null;
-    return {
-      kicker: ["People", person.category ?? person.role].filter(Boolean).join("  ·  "),
-      title: person.name,
-      summary: person.summary ?? person.knownFor,
-      meta: [person.era, person.birthplace].filter((item): item is string => Boolean(item)),
-      cta: "Read their story at",
-      image: person.image,
-      tone: person.imageTone,
-    };
-  }
-
-  if (kind === "battle") {
-    const battle = (await getBattles()).find((item) => item.slug === slug);
-    if (!battle) return null;
-    return {
-      kicker: ["Battle", battle.period].filter(Boolean).join("  ·  "),
-      title: battle.name,
-      summary: battle.summary,
-      meta: [battle.date, battle.location].filter(Boolean),
-      cta: "Explore the Battles map at",
-      image: battle.image,
-      tone: "crimson",
-    };
-  }
-
-  return null;
-}
-
 /**
  * Shortens text so the summary never runs into the bottom of the story: at the end of a
  * sentence if one ends well into the space, otherwise at a word.
@@ -138,53 +65,6 @@ function titleSize(title: string) {
   return 108;
 }
 
-/** The picture, cropped to the top of the story and small enough to draw quickly. */
-async function loadImage(src: string | undefined) {
-  if (!src) return null;
-  try {
-    const response = await fetch(src, { signal: AbortSignal.timeout(10_000) });
-    if (!response.ok) return null;
-    const jpeg = await sharp(Buffer.from(await response.arrayBuffer()))
-      .rotate()
-      .resize({ width: WIDTH, height: IMAGE_HEIGHT, fit: "cover", position: sharp.strategy.attention })
-      .jpeg({ quality: 84, mozjpeg: true })
-      .toBuffer();
-    return `data:image/jpeg;base64,${jpeg.toString("base64")}`;
-  } catch {
-    return null;
-  }
-}
-
-type Font = { name: string; data: ArrayBuffer; weight: 400 | 600 | 700; style: "normal" };
-
-/**
- * The site's own faces, from Google Fonts (which serves a whole TrueType file to a server).
- * Fetched once per server; without them the picture falls back to the built-in sans-serif.
- */
-let fontsPromise: Promise<Font[]> | null = null;
-function loadFonts() {
-  fontsPromise ??= Promise.all([
-    googleFont("Playfair Display", 700),
-    googleFont("Geist", 400),
-    googleFont("Geist", 600),
-  ]).catch((error) => {
-    console.warn("[instagram-story] Could not load fonts:", error);
-    fontsPromise = null;
-    return [];
-  });
-  return fontsPromise;
-}
-
-async function googleFont(family: string, weight: 400 | 600 | 700): Promise<Font> {
-  const css = await fetch(`https://fonts.googleapis.com/css2?family=${family.replace(/ /g, "+")}:wght@${weight}`, {
-    signal: AbortSignal.timeout(8_000),
-  }).then((response) => response.text());
-  const url = css.match(/src: url\(([^)]+)\) format\('(?:truetype|opentype)'\)/)?.[1];
-  if (!url) throw new Error(`No TrueType file for ${family} ${weight}`);
-  const data = await fetch(url, { signal: AbortSignal.timeout(8_000) }).then((response) => response.arrayBuffer());
-  return { name: family, data, weight, style: "normal" };
-}
-
 export async function GET(_request: Request, { params }: RouteContext<"/instagram-story/[kind]/[slug]">) {
   const { kind, slug } = await params;
   const card = await loadCard(kind, slug);
@@ -192,10 +72,11 @@ export async function GET(_request: Request, { params }: RouteContext<"/instagra
     return new Response("Not found", { status: 404 });
   }
 
-  const [image, fonts] = await Promise.all([loadImage(card.image), loadFonts()]);
-  const serif = fonts.some((font) => font.name === "Playfair Display") ? "Playfair Display" : undefined;
-  const sans = fonts.some((font) => font.name === "Geist") ? "Geist" : undefined;
-  const host = new URL(SITE_URL).host.replace(/^www\./, "");
+  const [image, { fonts, serif, sans }] = await Promise.all([
+    loadImage(card.image, WIDTH, IMAGE_HEIGHT),
+    loadFonts(),
+  ]);
+  const host = SITE_HOST;
   const size = titleSize(card.title);
   // Some records repeat the name as the place; it says nothing the title doesn't.
   const meta = card.meta.filter((item) => item.trim().toLowerCase() !== card.title.trim().toLowerCase());
@@ -376,13 +257,5 @@ export async function GET(_request: Request, { params }: RouteContext<"/instagra
     { width: WIDTH, height: HEIGHT, fonts }
   ).arrayBuffer();
 
-  // A JPEG is a fraction of the PNG's size, which matters when it is sent from a phone.
-  const jpeg = await sharp(Buffer.from(png)).jpeg({ quality: 88, mozjpeg: true }).toBuffer();
-
-  return new Response(new Uint8Array(jpeg), {
-    headers: {
-      "Content-Type": "image/jpeg",
-      "Cache-Control": "public, max-age=300, s-maxage=3600, stale-while-revalidate=86400",
-    },
-  });
+  return jpegResponse(png);
 }
